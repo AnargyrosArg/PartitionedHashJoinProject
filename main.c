@@ -1,21 +1,25 @@
 #include <stdio.h>
-#include "hash1.h"
 #include <stdlib.h>
 #include <time.h>
 
+#include "hash1.h"
+#include "partition.h"
 
-int main(void){
-    printf("hash1 result: %d\n",hash1(-139,2));
-    
-    tuple* tuples = malloc(1000 * sizeof(tuple));
-    for(int i=0;i<1000;i++){
+#define SAMPLE_SIZE 400
+
+int main(void){    
+    tuple* tuples = malloc(SAMPLE_SIZE * sizeof(tuple));
+    for(int i=0;i<SAMPLE_SIZE;i++){
         tuples[i].key=i;
         tuples[i].payload=rand()%1000;
+        if(hash1(tuples[i].payload,2)==4){
+            printf("---------------------DING----------------------------\n");
+        }
     }
     relation relA;
-    relA.num_tuples=1000;
+    relA.num_tuples=SAMPLE_SIZE;
     relA.tuples=tuples;
-
-    partition_relation(relA,3);
+    
+    partition_relation(relA,2);
     return 0;
 }

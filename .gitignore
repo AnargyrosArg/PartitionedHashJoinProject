@@ -1,0 +1,5 @@
+out
+build/partition.o
+build/main.o
+build/hash1.o
+*.o

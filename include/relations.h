@@ -1,9 +1,12 @@
+
+#ifndef MYTYPES_H
+#define MYTYPES_H
+
 typedef struct tuple tuple;
 
 typedef struct relation relation;
 
 typedef struct result result;
-
 
 struct tuple{
     int key;
@@ -19,3 +22,11 @@ struct result{
     tuple* results;
     unsigned int result_size;
 };
+
+
+
+#endif
+
+
+
+
