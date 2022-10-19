@@ -17,6 +17,10 @@
         "system_error": "c",
         "functional": "c",
         "tuple": "c",
-        "utility": "c"
+        "utility": "c",
+        "unistd.h": "c",
+        "util.h": "c",
+        "stdlib.h": "c",
+        "utils.h": "c"
     }
 }

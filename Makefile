@@ -1,10 +1,13 @@
 BUILD_DIR = ./build
 GCC_FLAGS = -I ./include/ -Wall
-OBJ_FILES = main.o hash1.o partition.o
+OBJ_FILES = main.o hash1.o partition.o utils.o
 
 main: $(OBJ_FILES)
 	gcc $(GCC_FLAGS) $(BUILD_DIR)/*.o -o out
- 
+
+utils.o: utils.c
+	gcc $(GCC_FLAGS) -c utils.c -o $(BUILD_DIR)/utils.o
+
 hash1.o: hash1.c
 	gcc $(GCC_FLAGS) -c hash1.c -o $(BUILD_DIR)/hash1.o
 
