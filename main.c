@@ -21,5 +21,6 @@ int main(void){
     relA.tuples=tuples;
     
     partition_relation(relA,2);
+    printf("created commit test");
     return 0;
 }
