@@ -4,6 +4,7 @@
 
 #include "hash1.h"
 #include "partition.h"
+#include "hashtable.h"
 
 #define SAMPLE_SIZE 400
 
@@ -21,6 +22,17 @@ int main(void){
     relA.tuples=tuples;
     
     partition_relation(relA,2);
-    printf("created commit test");
+
+    hashbucket p= inithashbucket(4);
+    printf("print hashbucket%d %d %d %d\n",p.bitmap[1], p.bitmap[2], p.bitmap[0], p.bitmap[3]);
+
+    hashtable *ht= inithashtable(10,3);
+    printf(" %d %d %d\n", ht->htbuckets[1].bitmap[1],ht->htbuckets[2].bitmap[3],ht->htbuckets[1].bitmap[3]);
+    p.bitmap[1] =1;
+    p.rowid = 12;
+    ht->htbuckets[1].bitmap[1] = 5;
+    printf("%d\n",ht->htbuckets[1].bitmap[1]);
+    expandhashtable(&ht);
+    printf("%d\n",ht->htbuckets[1].bitmap[1]);
     return 0;
 }
