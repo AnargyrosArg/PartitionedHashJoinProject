@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <math.h>
 
 #include "partition.h"
 #include "hash1.h"
@@ -10,9 +11,9 @@ Source file containing logic for the partitioning the relations
 */
 
 //print histogram for debug purposes
-void print_histogram(int* histogram,int size){
+void print_histogram(int* histogram,int size,int* depths){
     for(int i=0;i<size;i++){
-        printf("Bucket %d has %d elements\n",i,histogram[i]);
+        printf("Bucket %d has %d elements %d depth, size %d\n",i,histogram[i],depths[i],size);
     }
 }
 
@@ -22,66 +23,28 @@ void init_relation(relation* rel,int num_tuples){
     rel->num_tuples = num_tuples;
 }
 
-//Initializes histogram values to 0
-void init_array(int* histogram,int histogram_size,int value){
-    for(int i=0;i < histogram_size ;i++){
-        histogram[i]=value;
+void init_array(int* array,int size,int value){
+    for(int i=0;i < size ;i++){
+        array[i]=value;
     }
 }
 
-// //partition the original relation in 2^n buckets 
-// relation* partition_relation_old(relation rel,int n){
+int power(int base,int exp){
+    int ret=base;
+    for(int i=0;i<exp-1;i++){
+        ret *= base;
+    }
+    return ret;
+}
 
-//     int prefix_sum[histogram_size];
-//     int sum=0;
-//     //calculate prefix sums for each bucket
-//     for(int i=0;i<histogram_size;i++){
-//         prefix_sum[i]=sum;
-//         sum += histogram[i];       
-//     }
-
-//     relation ordered_rel;
-//     init_relation(&ordered_rel,rel.num_tuples);
-//     //printf("rel inited\n");
-//     //a table to keep the last index of each bucket that an element was inserted in
-//     int offsets[histogram_size];
-//     init_histogram(offsets,histogram_size);
-//     for(int i=0;i<rel.num_tuples;i++){
-//         int bucket = hash1(rel.tuples[i].payload,n);
-//         ordered_rel.tuples[prefix_sum[bucket] + offsets[bucket]]= rel.tuples[i];
-//         offsets[bucket]++;
-//     }
-
-//     //check size of each partition to see if it fits in L2 Cache
-//     for(int partition=0;partition<histogram_size;partition++){
-//         if(histogram[partition]*sizeof(int)>L2_SIZE_BYTES){
-//             //if a partition doesnt fit the L2 cache we need to split that partition into two
-            
-//             //depth table keeps how many bits we have used to hash the values in each partition
-//             int depth_table[histogram_size];
-//             for(int i=0;i<histogram_size;i++){
-//                 depth_table[i]=n;
-//             }
-            
-//             //----- init relation
-//             relation test;
-//             test.num_tuples=histogram[partition];
-//             tuple* test_data = malloc((prefix_sum[partition+1]-prefix_sum[partition])*sizeof(tuple));
-//             test.tuples=test_data;
-//             //-----
-//             for(int element=0;element<test.num_tuples;element++){
-                
-//             }
-//         }
-//     }
-
-
-
-    
-//     for(int i=0;i<ordered_rel.num_tuples;i++){
-//       // printf("Element with payload %d and hashed value %d\n",ordered_rel.tuples[i].payload,hash1(ordered_rel.tuples[i].payload,n));
-//     }
-// }
+int pseudo_log2(int val){
+    int count=0;
+    while(val/2){
+        count++;
+        val=val/2;
+    }
+    return count;
+}
 
 //doubles histogram in size and copies over previous values
 void expand_histogram(int** histogram,int* histogram_size){
@@ -106,7 +69,7 @@ void expand_depth_table(int** depth_table,int* size){
         if(i<(*size)/2){
             new_depth_table[i]=(*depth_table)[i];
         }else{
-            new_depth_table[i]= ((*size)>>2)+1;
+            new_depth_table[i]= pseudo_log2((*size));
         }
     }
     free(*depth_table);
@@ -115,14 +78,15 @@ void expand_depth_table(int** depth_table,int* size){
 
 
 
-//this function checks if any partition exceeds the L2 cache size 
-void repartition(relation* rel,int** histogram,int** depth_table,int* histogram_size,long  L2_SIZE_BYTES){
+//this function checks if any partition exceeds the L2 cache size and splits it accordingly into smaller ones
+void repartition(relation* rel,int** histogram,int** depth_table,int* histogram_size,int** partition_map,long  L2_SIZE_BYTES){
+    //iterate over partitions
     for(int partition=0; partition< *histogram_size; partition++){
+        //check is size smaller than L2 cache
         if((*histogram)[partition]*sizeof(int)>L2_SIZE_BYTES){
-          //  printf("-----REPARTITIONING partition:%d-----\n",partition);
-           // printf("local depth: %d global depth: %d n_elements %d\n",(*depth_table)[partition],(*histogram_size)>>2,(*histogram)[partition]);
-            if(((*depth_table)[partition]<<2) > *histogram_size){
-            //    printf("Expasion needed local depth: %d global depth: %d\n",(*depth_table)[partition],(*histogram_size)>>2);
+            //check if we need to increase global depth
+            printf("%d - %d\n",(*depth_table)[partition],pseudo_log2((*histogram_size)));
+            if(  (*depth_table)[partition] >= pseudo_log2((*histogram_size))){
                 expand_histogram(histogram,histogram_size);
                 expand_depth_table(depth_table,histogram_size);
             }
@@ -132,15 +96,14 @@ void repartition(relation* rel,int** histogram,int** depth_table,int* histogram_
             //iterate over relation
             for(int element=0;element<rel->num_tuples;element++){
                 //if element hashed into bucket that was full,rehash with greater depth
-                //printf("prev hash:%d , partition %d, depth %d\n",hash1(rel->tuples[element].payload,(*depth_table)[partition]-1),partition,(*depth_table)[partition]-1);
                 if(hash1(rel->tuples[element].payload,(*depth_table)[partition]-1)==partition){
-                  //  printf("element with payload: %d depth %d hash value %d , now hashed to %d\n",rel->tuples[element].payload,(*depth_table)[partition]-1,hash1(rel->tuples[element].payload,(*depth_table)[partition]-1),hash1(rel->tuples[element].payload,(*depth_table)[partition]));
                     (*histogram)[hash1(rel->tuples[element].payload,(*depth_table)[partition])]++;
+                    (*partition_map)[element]=hash1(rel->tuples[element].payload,(*depth_table)[partition]);
                 } 
             }
-          //  printf("-----------------------------------\n");
-           // print_histogram(*histogram,*histogram_size);
-            repartition(rel,histogram,depth_table,histogram_size,L2_SIZE_BYTES);
+            printf("-----------------------------------\n");
+            print_histogram(*histogram,*histogram_size,*depth_table);
+            repartition(rel,histogram,depth_table,histogram_size,partition_map,L2_SIZE_BYTES);
             break;
         }
     }
@@ -148,13 +111,14 @@ void repartition(relation* rel,int** histogram,int** depth_table,int* histogram_
 }
 
 
+
 relation* partition_relation(relation rel,int n){
     //L2 cache size,in bytes,per core
     long L2_SIZE_BYTES = 256;//sysconf(_SC_LEVEL2_CACHE_SIZE);
     
     //Our histograms are int arrays where the index is the bucket hash value and the number pointed to
-    //by the index is the number of occurences
-    int histogram_size = 2<<(n-1);
+    //by the index is the number of occurences , size is 2^n
+    int histogram_size = power(2,n);
     int* histogram = malloc(histogram_size*sizeof(int));
     
     //init histogram values to 0
@@ -164,21 +128,45 @@ relation* partition_relation(relation rel,int n){
     int* depth_table= malloc(histogram_size*sizeof(int));
     init_array(depth_table,histogram_size,n);
     
-
     //fill initial histogram by hashing (using n bits of the value) the payloads of the relation tuples and counting the results
     for(int i=0;i<rel.num_tuples;i++){
         histogram[hash1(rel.tuples[i].payload,n)]++;
     }
-    printf("-----------pass 0 partition----------\n");
-    print_histogram(histogram,histogram_size);
-    repartition(&rel,&histogram,&depth_table,&histogram_size,L2_SIZE_BYTES);
-    printf("----------pass n partition-----------\n");
-    print_histogram(histogram,histogram_size);
-    printf("---------------------\n");
 
-    int sum=0;
-    for(int i=0;i<histogram_size;i++){
-        sum += histogram[i];
+    //this maps elements of the relation to the partition they belong to
+    int* partition_map = malloc(rel.num_tuples*sizeof(int));
+    //it is initialized with the default depth hash values of each element and corrected inside the repartition function
+    //if we expand
+    for(int i=0;i<rel.num_tuples;i++){
+        partition_map[i] = hash1(rel.tuples[i].payload,n);
     }
-    printf("%d\n",sum);
+    print_histogram(histogram,histogram_size,depth_table);
+    repartition(&rel,&histogram,&depth_table,&histogram_size,&partition_map,L2_SIZE_BYTES);
+    
+    int prefix_sum[histogram_size];
+    int sum=0;
+    //calculate prefix sums for each bucket
+    for(int i=0;i<histogram_size;i++){
+        prefix_sum[i]=sum;
+        sum += histogram[i];       
+    }
+
+    //allocate room for ordered relation
+    relation ordered_rel;
+    init_relation(&ordered_rel,rel.num_tuples);
+
+    //a table to keep the last index of each bucket that an element was inserted in
+    int offsets[histogram_size];
+    init_array(offsets,histogram_size,0);
+    for(int i=0;i<rel.num_tuples;i++){
+        int bucket = partition_map[i];
+        ordered_rel.tuples[prefix_sum[bucket] + offsets[bucket]]= rel.tuples[i];
+        offsets[bucket]++;
+    }
+    for(int i=0;i<rel.num_tuples;i++){
+      //  printf("payload %d\n",ordered_rel.tuples[i].payload);
+    }
 }
+
+
+
