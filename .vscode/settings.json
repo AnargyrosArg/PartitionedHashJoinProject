@@ -21,7 +21,8 @@
         "unistd.h": "c",
         "util.h": "c",
         "stdlib.h": "c",
-        "utils.h": "c"
+        "utils.h": "c",
+        "hashtable.h": "c"
     },
-    "C_Cpp.errorSquiggles": "Enabled"
+    "C_Cpp.errorSquiggles": "disabled"
 }
