@@ -3,7 +3,6 @@
 // NOTES:
 // - on rehash, neighborhood size does not increase. May change
 // - hash function used for hash table seems kinda bad, but the rehashes might be because of the small, static neighborhood
-// - hash table implementation doesn't use actual bitmap yet, so it's probably slightly less efficient
 // - hopscotch has not been tested extremely thoroughly, but seems to work fine
 
 // hash function for hash table. Max limits output range
