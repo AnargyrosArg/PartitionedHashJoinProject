@@ -15,10 +15,22 @@ unsigned int hash2(unsigned int x, unsigned int max) {
 }
 
 
+// get value of n-th bit of bitmap (n=0 refers to MOST significant bit of the integer)
+int bitmap_get_bit(unsigned int bitmap, int n) {
+    return ((bitmap << n) >> (__INT_WIDTH__-1));
+}
+
+// set n-th bit of bitmap (n=0 refers to MOST significant bit of the integer)
+void bitmap_set_bit(unsigned int* bitmap, int n, int value) {
+    if (value == 1) *bitmap = (1 << (__INT_WIDTH__-n-1)) | (*bitmap);
+    if (value == 0) *bitmap = *bitmap & (~(1 << (__INT_WIDTH__-n-1)));
+}
+
 // returns 0 or 1 depending on whether bitmap is full (aka when everything is 1)
-int bitmap_full(int* bitmap, int size) {
+int bitmap_full(unsigned int bitmap, int size) {
     for (int i=0; i<size; i++)
-        if (bitmap[i] == 0) return 0;
+        if (!bitmap_get_bit(bitmap, i))
+            return 0;
     return 1;
 }
 
@@ -29,7 +41,7 @@ void print_hashtable(hashtable* table) {
     for (int i=0; i<table->tablesize; i++) {
         printf("%d: %d, ", i, table->htbuckets[i].rowid);
         for (int j=0; j<table->nbsize; j++) {
-            printf("%d", table->htbuckets[i].bitmap[j]);
+            printf("%d", bitmap_get_bit(table->htbuckets[i].bitmap, j));
         }
         printf("\n");
     }
@@ -41,11 +53,7 @@ hashbucket init_hashbucket(int n) {
     hashbucket bucket;
     bucket.rowid = -1;
     bucket.key = 0;
-    bucket.bitmap = malloc(n*sizeof(int));
-
-    int i = 0;
-    for(i=0; i<n;i++)
-        bucket.bitmap[i]=0;
+    bucket.bitmap = 0;
     return bucket;   
 }
 
@@ -57,8 +65,8 @@ void bucket_swap(hashtable* table, int empty_bucket, int other_bucket, int bit) 
     table->htbuckets[empty_bucket].key = table->htbuckets[other_bucket+bit].key;
     table->htbuckets[other_bucket+bit].rowid = -1;
     table->htbuckets[other_bucket+bit].key = 0;
-    table->htbuckets[other_bucket].bitmap[bit] = 0;
-    table->htbuckets[other_bucket].bitmap[empty_bucket-other_bucket] = 1;
+    bitmap_set_bit(&table->htbuckets[other_bucket].bitmap, bit, 0);
+    bitmap_set_bit(&table->htbuckets[other_bucket].bitmap, empty_bucket-other_bucket, 1);
 }
 
 
@@ -123,7 +131,7 @@ hashtable* insert_hashtable(hashtable* table, int key, int data) {
                     if (swapped) break;
                     for (int k=0; k<bit_num; k++) { // for every bitmap bit that matters (as we move through positions, less bits matter)
                         //printf("empty at %d, checking bucket %d, bit %d\n", pos, j, k);
-                        if (table->htbuckets[j].bitmap[k]) {
+                        if (bitmap_get_bit(table->htbuckets[j].bitmap, k)) { 
                             bucket_swap(table, pos, j, k);
                             //printf("\nafter swap:\n");
                             //print_hashtable(table);
@@ -141,7 +149,7 @@ hashtable* insert_hashtable(hashtable* table, int key, int data) {
             }
             table->htbuckets[pos].rowid = data; // done
             table->htbuckets[pos].key = key;
-            table->htbuckets[hash_value].bitmap[pos-hash_value] = 1;
+            bitmap_set_bit(&table->htbuckets[hash_value].bitmap, pos-hash_value, 1);
             break;
         }
     }
@@ -173,8 +181,6 @@ void rehash_hashtable(hashtable **ht, int cause_key, int cause_data) {
 
 
 void delete_hashtable(hashtable *ht) {
-    int i=0;
-    for(i=0; i< ht->tablesize; i++)
-       free(ht->htbuckets[i].bitmap);
+    free(ht->htbuckets);
     free(ht);
 }

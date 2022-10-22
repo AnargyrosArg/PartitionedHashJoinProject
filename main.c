@@ -38,9 +38,9 @@ int main(void) {
 
     // recreating example from ekfonisi to test hopscotch
     
-    // hashtable* table2 = init_hashtable(4, 4);
+    //hashtable* table2 = init_hashtable(4, 4);
 
-    // // random rowid values
+    // random rowid values
     // table2->htbuckets[0].rowid = 10;
     // table2->htbuckets[1].rowid = 2;
     // table2->htbuckets[2].rowid = 5;
@@ -51,20 +51,20 @@ int main(void) {
     // table2->htbuckets[7].rowid = -1;
 
     // // bitmaps from ekfonisi
-    // table2->htbuckets[0].bitmap[0] = 1;
-    // table2->htbuckets[0].bitmap[1] = 0;
-    // table2->htbuckets[0].bitmap[2] = 1;
-    // table2->htbuckets[0].bitmap[3] = 0;
+    // bitmap_set_bit(&table2->htbuckets[0].bitmap, 0, 1);
+    // bitmap_set_bit(&table2->htbuckets[0].bitmap, 1, 0);
+    // bitmap_set_bit(&table2->htbuckets[0].bitmap, 2, 1);
+    // bitmap_set_bit(&table2->htbuckets[0].bitmap, 3, 0);
 
-    // table2->htbuckets[2].bitmap[0] = 0;
-    // table2->htbuckets[2].bitmap[1] = 1;
-    // table2->htbuckets[2].bitmap[2] = 0;
-    // table2->htbuckets[2].bitmap[3] = 0;
+    // bitmap_set_bit(&table2->htbuckets[2].bitmap, 0, 0);
+    // bitmap_set_bit(&table2->htbuckets[2].bitmap, 1, 1);
+    // bitmap_set_bit(&table2->htbuckets[2].bitmap, 2, 0);
+    // bitmap_set_bit(&table2->htbuckets[2].bitmap, 3, 0);
 
-    // table2->htbuckets[4].bitmap[0] = 0;
-    // table2->htbuckets[4].bitmap[1] = 1;
-    // table2->htbuckets[4].bitmap[2] = 0;
-    // table2->htbuckets[4].bitmap[3] = 0;
+    // bitmap_set_bit(&table2->htbuckets[4].bitmap, 0, 0);
+    // bitmap_set_bit(&table2->htbuckets[4].bitmap, 1, 1);
+    // bitmap_set_bit(&table2->htbuckets[4].bitmap, 2, 0);
+    // bitmap_set_bit(&table2->htbuckets[4].bitmap, 3, 0);
 
     // print_hashtable(table2);
     // insert_hashtable(table2, 528, 69); // trying to insert 69 to pos 0, but only empty slot is at pos 7
