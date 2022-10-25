@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "../include/hash1.h"
-#include "../include/acutest.h"
+#include "hash1.h"
+#include "acutest.h"
 
 void simple_hash1_calls(void){
     TEST_ASSERT(hash1(3,3) == 3);
