@@ -1,24 +1,16 @@
 BUILD_DIR = ./build
 GCC_FLAGS = -I ./include/ -Wall
-OBJ_FILES = main.o hash1.o partition.o utils.o hashtable.o
+SOURCE_FILES = main.c hash1.c partition.c utils.c hashtable.c
+OBJ_FILES = $(addprefix $(BUILD_DIR)/,$(SOURCE_FILES:.c=.o))
 
-main: $(OBJ_FILES)
+out: $(BUILD_DIR) $(OBJ_FILES)
 	gcc $(GCC_FLAGS) $(BUILD_DIR)/*.o -o out
 
-utils.o: utils.c
-	gcc $(GCC_FLAGS) -c utils.c -o $(BUILD_DIR)/utils.o
+$(BUILD_DIR)/%.o : %.c
+	gcc $(GCC_FLAGS) -c $< -o $@
 
-hash1.o: hash1.c
-	gcc $(GCC_FLAGS) -c hash1.c -o $(BUILD_DIR)/hash1.o
-
-partition.o: partition.c
-	gcc $(GCC_FLAGS) -c partition.c -o $(BUILD_DIR)/partition.o
-
-main.o: main.c
-	gcc $(GCC_FLAGS) -c main.c -o $(BUILD_DIR)/main.o
-
-hashtable.o: hashtable.c
-	gcc $(GCC_FLAGS) -c hashtable.c -o $(BUILD_DIR)/hashtable.o
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
 
 clean:
 	rm -rf $(BUILD_DIR)/* ./out
