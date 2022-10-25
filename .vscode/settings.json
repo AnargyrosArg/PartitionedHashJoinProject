@@ -22,7 +22,8 @@
         "util.h": "c",
         "stdlib.h": "c",
         "utils.h": "c",
-        "hashtable.h": "c"
-    },
-    "C_Cpp.errorSquiggles": "disabled"
+        "hashtable.h": "c",
+        "hash1.h": "c",
+        "acutest.h": "c"
+    }
 }
