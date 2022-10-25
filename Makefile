@@ -30,4 +30,4 @@ clean: clean_tests
 	rm -rf $(BUILD_DIR)/* ./out
 
 clean_tests:
-	cd $(TEST_DIR) && make clean
+	@cd $(TEST_DIR) && make clean

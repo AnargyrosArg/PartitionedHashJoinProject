@@ -75,7 +75,7 @@ void repartition(relation* rel,int** histogram,int** depth_table,int* histogram_
 
 
 
-void partition_relation(relation rel,int n){
+partition_result partition_relation(relation rel,int n){
     //L2 cache size,in bytes,per core
     long L2_SIZE_BYTES = 256;//sysconf(_SC_LEVEL2_CACHE_SIZE);
     
@@ -106,7 +106,7 @@ void partition_relation(relation rel,int n){
 
     repartition(&rel,&histogram,&depth_table,&histogram_size,&partition_map,L2_SIZE_BYTES);
     
-    int prefix_sum[histogram_size];
+    int *prefix_sum = malloc(histogram_size * sizeof(int));
     int sum=0;
     //calculate prefix sums for each bucket
     for(int i=0;i<histogram_size;i++){
@@ -127,13 +127,23 @@ void partition_relation(relation rel,int n){
         offsets[bucket]++;
     }
     
-    print_histogram(histogram,histogram_size,depth_table);
+// print_histogram(histogram,histogram_size,depth_table);
     printf("------------------------------------------------\n");
     for(int i=0;i<histogram_size;i++){
         printf("Partition %d begins at index: %d\n",i,prefix_sum[i]);
     }
+
+
+    free(histogram);
+    free(partition_map);
+    free(depth_table);
     //TODO
     // return ordered relation and the prefix sum array
+    partition_result result;
+    result.ordered_rel = ordered_rel;
+    result.prefix_sum=prefix_sum;
+    result.histogram_size = histogram_size;
+    return result;
 }
 
 

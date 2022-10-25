@@ -27,6 +27,10 @@ void init_relation(relation* rel,int num_tuples){
     rel->num_tuples = num_tuples;
 }
 
+void delete_relation(relation rel){
+    free(rel.tuples);
+}
+
 void init_array(int* array,int size,int value){
     for(int i=0;i < size ;i++){
         array[i]=value;

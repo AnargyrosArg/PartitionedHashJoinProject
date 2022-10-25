@@ -1,12 +1,9 @@
-GCC_FLAGS = -I../ -I../include
-
-#Test source files MUST be named <source_test_is_for>_test.c
-#or the compiling wont work
-#To add a test source file append it to list below
+#Test source files MUST be named <source_test_is_for>_test.c or the compiling wont work
 SOURCE_FILES = $(wildcard *.c)
 OBJ_FILES = $(SOURCE_FILES:.c=.o)
 EXECUTABLE_FILES = $(SOURCE_FILES:.c= )
 TESTS = $(addprefix test_,$(EXECUTABLE_FILES:_tests= ))
+GCC_FLAGS = -I../ -I../include
 BUILD_DIR = ../build
 
 .PHONY:	clean run_tests
