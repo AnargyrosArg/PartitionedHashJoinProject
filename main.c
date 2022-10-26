@@ -8,31 +8,74 @@
 
 #define SAMPLE_SIZE 400
 
-int main(void){    
+int main(void) {
     tuple* tuples = malloc(SAMPLE_SIZE * sizeof(tuple));
-    for(int i=0;i<SAMPLE_SIZE;i++){
-        tuples[i].key=i;
-        tuples[i].payload=rand()%1000;
-        if(hash1(tuples[i].payload,2)==4){
-            printf("---------------------DING----------------------------\n");
-        }
+    for (int i=0; i<SAMPLE_SIZE; i++) {
+        tuples[i].key = i;
+        tuples[i].payload = rand() % 1000;
+        //printf("hash for %d: %u\n", tuples[i].payload, hash2(tuples[i].payload, 100)); // test for hash2
     }
     relation relA;
-    relA.num_tuples=SAMPLE_SIZE;
-    relA.tuples=tuples;
+    relA.num_tuples = SAMPLE_SIZE;
+    relA.tuples = tuples;
+    partition_result partition_info = partition_relation(relA, 2);
+    for(int i=0;i<partition_info.histogram_size;i++){
+        printf("partition %d begins at %d\n",i,partition_info.prefix_sum[i]);
+    }
     
-    partition_relation(relA,2);
+    //=================================================================================================================
+    // int ret_rowid, data; // data represents elements of the column we want to join (ex. an element of R.a)
+    // hashtable* table = init_hashtable(10, 4); // init creates a 2*n size hash table (in this case, size of 20)
 
-    hashbucket p= inithashbucket(4);
-    printf("print hashbucket%d %d %d %d\n",p.bitmap[1], p.bitmap[2], p.bitmap[0], p.bitmap[3]);
+    // for (int i=0; i<20; i++) {
+    //     data = rand() % 1000;
+    //     table = insert_hashtable(table, data, i); // use data as key to store rowid (in this case i) in hash table
+    //     print_hashtable(table);
+    //     search_hashtable(table, data, &ret_rowid); // search using data as key, get rowid back
+    //     printf("found %d\n", ret_rowid);
+    // }
+    // print_hashtable(table);
+    // delete_hashtable(table);
+    //=================================================================================================================
 
-    hashtable *ht= inithashtable(10,3);
-    printf(" %d %d %d\n", ht->htbuckets[1].bitmap[1],ht->htbuckets[2].bitmap[3],ht->htbuckets[1].bitmap[3]);
-    p.bitmap[1] =1;
-    p.rowid = 12;
-    ht->htbuckets[1].bitmap[1] = 5;
-    printf("%d\n",ht->htbuckets[1].bitmap[1]);
-    expandhashtable(&ht);
-    printf("%d\n",ht->htbuckets[1].bitmap[1]);
+
+    // recreating example from ekfonisi to test hopscotch
+    
+    //hashtable* table2 = init_hashtable(4, 4);
+
+    // random rowid values
+    // table2->htbuckets[0].rowid = 10;
+    // table2->htbuckets[1].rowid = 2;
+    // table2->htbuckets[2].rowid = 5;
+    // table2->htbuckets[3].rowid = 8;
+    // table2->htbuckets[4].rowid = 3;
+    // table2->htbuckets[5].rowid = 48;
+    // table2->htbuckets[6].rowid = 32;
+    // table2->htbuckets[7].rowid = -1;
+
+    // // bitmaps from ekfonisi
+    // bitmap_set_bit(&table2->htbuckets[0].bitmap, 0, 1);
+    // bitmap_set_bit(&table2->htbuckets[0].bitmap, 1, 0);
+    // bitmap_set_bit(&table2->htbuckets[0].bitmap, 2, 1);
+    // bitmap_set_bit(&table2->htbuckets[0].bitmap, 3, 0);
+
+    // bitmap_set_bit(&table2->htbuckets[2].bitmap, 0, 0);
+    // bitmap_set_bit(&table2->htbuckets[2].bitmap, 1, 1);
+    // bitmap_set_bit(&table2->htbuckets[2].bitmap, 2, 0);
+    // bitmap_set_bit(&table2->htbuckets[2].bitmap, 3, 0);
+
+    // bitmap_set_bit(&table2->htbuckets[4].bitmap, 0, 0);
+    // bitmap_set_bit(&table2->htbuckets[4].bitmap, 1, 1);
+    // bitmap_set_bit(&table2->htbuckets[4].bitmap, 2, 0);
+    // bitmap_set_bit(&table2->htbuckets[4].bitmap, 3, 0);
+
+    // print_hashtable(table2);
+    // insert_hashtable(table2, 528, 69); // trying to insert 69 to pos 0, but only empty slot is at pos 7
+    // print_hashtable(table2);
+    // delete_hashtable(table2);
+
+    delete_relation(relA);
+    delete_relation(partition_info.ordered_rel);
+    free(partition_info.prefix_sum);
     return 0;
 }

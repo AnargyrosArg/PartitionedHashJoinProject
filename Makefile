@@ -1,24 +1,33 @@
 BUILD_DIR = ./build
-GCC_FLAGS = -I ./include/ -Wall
-OBJ_FILES = main.o hash1.o partition.o utils.o hashtable.o
+TEST_DIR = ./tests
+GCC_FLAGS = -I./include/ -Wall
+SOURCE_FILES = main.c hash1.c partition.c utils.c hashtable.c
+OBJ_FILES = $(addprefix $(BUILD_DIR)/,$(SOURCE_FILES:.c=.o))
 
-main: $(OBJ_FILES)
+.PHONY: clean clean_tests
+
+#Default rule, makes executable
+out: $(BUILD_DIR) $(OBJ_FILES)
 	gcc $(GCC_FLAGS) $(BUILD_DIR)/*.o -o out
 
-utils.o: utils.c
-	gcc $(GCC_FLAGS) -c utils.c -o $(BUILD_DIR)/utils.o
+#Compiles each source file into its object file individually 
+$(BUILD_DIR)/%.o : %.c
+	gcc $(GCC_FLAGS) -c $< -o $@
 
-hash1.o: hash1.c
-	gcc $(GCC_FLAGS) -c hash1.c -o $(BUILD_DIR)/hash1.o
+#Rule to run all tests , there is a separate Makefile in the tests directory that we simply run 
+test: $(OBJ_FILES)  $(TEST_DIR)
+	cd $(TEST_DIR) && make
 
-partition.o: partition.c
-	gcc $(GCC_FLAGS) -c partition.c -o $(BUILD_DIR)/partition.o
+#Rule to run individual test , eg: make test_hash1
+test_%: $(BUILD_DIR)/%.o $(TEST_DIR)
+	cd $(TEST_DIR) && make $@
 
-main.o: main.c
-	gcc $(GCC_FLAGS) -c main.c -o $(BUILD_DIR)/main.o
+#Rule to make sure build directory exists
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
 
-hashtable.o: hashtable.c
-	gcc $(GCC_FLAGS) -c hashtable.c -o $(BUILD_DIR)/hashtable.o
-
-clean:
+clean: clean_tests
 	rm -rf $(BUILD_DIR)/* ./out
+
+clean_tests:
+	@cd $(TEST_DIR) && make clean

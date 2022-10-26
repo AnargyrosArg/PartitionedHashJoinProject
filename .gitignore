@@ -1,5 +1,4 @@
 out
-build/partition.o
-build/main.o
-build/hash1.o
 *.o
+tests/hash1_tests
+tests/partition_tests
