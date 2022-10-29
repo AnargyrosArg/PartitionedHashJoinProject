@@ -2,9 +2,8 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "hash1.h"
-#include "partition.h"
-#include "hashtable.h"
+
+#include "join.h"
 
 #define SAMPLE_SIZE 400
 
@@ -15,27 +14,39 @@ int main(void) {
         tuples[i].payload = rand() % 1000;
         //printf("hash for %d: %u\n", tuples[i].payload, hash2(tuples[i].payload, 100)); // test for hash2
     }
+    
     relation relA;
     relA.num_tuples = SAMPLE_SIZE;
     relA.tuples = tuples;
-    partition_result partition_info = partition_relation(relA, 2);
-    for(int i=0;i<partition_info.histogram_size;i++){
-        printf("partition %d begins at %d\n",i,partition_info.prefix_sum[i]);
-    }
+
     
+    tuple* tuples2 = malloc(SAMPLE_SIZE * sizeof(tuple));
+    for (int i=0; i<SAMPLE_SIZE; i++) {
+        tuples2[i].key = i;
+        tuples2[i].payload = rand() % 1000;
+        //printf("hash for %d: %u\n", tuples[i].payload, hash2(tuples[i].payload, 100)); // test for hash2
+    }
+
+    
+    relation relB;
+    relB.num_tuples = SAMPLE_SIZE;
+    relB.tuples = tuples2;
+
+    joinfunction(relA,relB);
+
     //=================================================================================================================
     // int ret_rowid, data; // data represents elements of the column we want to join (ex. an element of R.a)
     // hashtable* table = init_hashtable(10, 4); // init creates a 2*n size hash table (in this case, size of 20)
-
+    //
     // for (int i=0; i<20; i++) {
     //     data = rand() % 1000;
     //     table = insert_hashtable(table, data, i); // use data as key to store rowid (in this case i) in hash table
-    //     print_hashtable(table);
-    //     search_hashtable(table, data, &ret_rowid); // search using data as key, get rowid back
-    //     printf("found %d\n", ret_rowid);
-    // }
-    // print_hashtable(table);
-    // delete_hashtable(table);
+    //    //print_hashtable(table);
+    //    search_hashtable(table, data, &ret_rowid); // search using data as key, get rowid back
+    //    printf("found %d\n", ret_rowid);
+    //}
+    //print_hashtable(table);
+    //delete_hashtable(table);
     //=================================================================================================================
 
 
@@ -75,7 +86,6 @@ int main(void) {
     // delete_hashtable(table2);
 
     delete_relation(relA);
-    delete_relation(partition_info.ordered_rel);
-    free(partition_info.prefix_sum);
+    delete_relation(relB);
     return 0;
 }

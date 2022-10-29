@@ -89,15 +89,18 @@ hashtable *init_hashtable(int n, int H) {
 void search_hashtable(hashtable* table, int key, int* ret) {
     int table_size = table->tablesize;
     unsigned int hash_value = hash2(key, table_size);
+    int counter =0;
 
     for (int i=0; i<table->nbsize; i++) { // search neighborhood
         if (table->htbuckets[hash_value+i].key == key) {
             //printf("found rowid %d at index %d\n", table->htbuckets[hash_value+i].rowid, hash_value);
-            *ret = table->htbuckets[hash_value+i].rowid;
-            return;
+            ret[counter] = table->htbuckets[hash_value+i].rowid;
+            counter++;
         }
+        
     }
-    printf("could not find any data from key %d\n", key);
+    return;
+    //printf("could not find any data from key %d\n", key);
 }
 
 
@@ -108,7 +111,7 @@ hashtable* insert_hashtable(hashtable* table, int key, int data) {
     int neighborhood_size = table->nbsize;
     unsigned int hash_value = hash2(key, table_size);
 
-    printf("\ninserting %d using key %d, mapping to index %u\n", data, key, hash_value);
+    //printf("\ninserting %d using key %d, mapping to index %u\n", data, key, hash_value);
 
     // if bitmap for desired position is full, rehash
     if (bitmap_full(table->htbuckets[hash_value].bitmap, neighborhood_size)) {
