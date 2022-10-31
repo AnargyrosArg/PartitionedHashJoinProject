@@ -80,8 +80,8 @@ void joinfunction(relation r, relation s){
             //printf("for payload:%d\n", data);
             for(int k=0; k<size; k++) {
                 int rowid_s = partition_info2.ordered_rel.tuples[j].key;
-                printf("%d %d\n", rowid_s,p[k]);
-                //printf("%d ", p[k]);
+                int rowid_r = r.tuples[p[k]].key;
+                printf("%d %d ", rowid_s,rowid_r);
             }
             printf("\n");
         }
