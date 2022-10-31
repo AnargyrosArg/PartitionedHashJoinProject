@@ -56,7 +56,7 @@ void joinfunction(relation r, relation s){
         //we start putting the j-th item of our ordered r, as the prefix sum shows
         for( j = partition_info.prefix_sum[i]; j<stop; j++ ){
             int rel_tobeinserted = partition_info.ordered_rel.tuples[j].payload;
-            tableR = insert_hashtable(tableR, rel_tobeinserted, j);
+            tableR = insert_hashtable(tableR, rel_tobeinserted, partition_info.ordered_rel.tuples[j].key);
         }
         //print_hashtable(tableR);
 
@@ -67,37 +67,22 @@ void joinfunction(relation r, relation s){
         }
         //now that our hashtable is ready, all we have to do is the join for every tuple in bucket in rel S
         for(j = partition_info2.prefix_sum[i]; j<stop; j++){
-            int data = partition_info2.ordered_rel.tuples[j].payload;
-            int *p = malloc(sizeof(int) * tableR->nbsize);
-            //initialize all entries of p as -1, that means that p[i] stores no values
-            for(int k=0; k<tableR->nbsize; k++){
-                p[k]=-1;
-            }
+            int data = partition_info2.ordered_rel.tuples[j].payload, size = 0;
+            int* p;
 
-            search_hashtable(tableR, data, p);
-
+            p = search_hashtable(tableR, data, &size);
             
-            if(p[0]==-1)
+            if(p == NULL)
             {
                 continue;
             }
 
             //printf("for payload:%d\n", data);
-            for(int k=0; k<tableR->nbsize; k++){
-                //if p[k] equals to -1 it means that there are no more tuples so there is no reason to continue searching
-                if(p[k] == -1){
-                    break;
-                }
-                else{
-                    int rowid_s = partition_info2.ordered_rel.tuples[j].key;
-                    printf("%d %d\n", rowid_s,p[k]);
-                }
-                
+            for(int k=0; k<size; k++) {
+                int rowid_s = partition_info2.ordered_rel.tuples[j].key;
+                printf("%d %d\n", rowid_s,p[k]);
                 //printf("%d ", p[k]);
             }
-
-            //we have to free each time the array p
-            free(p);
             printf("\n");
         }
 
