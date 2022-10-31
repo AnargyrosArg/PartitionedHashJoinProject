@@ -1,6 +1,8 @@
 #include "relations.h"
 #include <stdlib.h>
+#include <stdio.h>
 
+void read_file(relation *rela,char *name);
 int power(int base,int exp);
 int pseudo_log2(int val);
 void init_relation(relation* rel,int num_tuples);

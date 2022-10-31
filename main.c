@@ -3,39 +3,19 @@
 #include <time.h>
 #include "join.h"
 
-#define SAMPLE_SIZE 400
+#define SAMPLE_SIZE 500
 
 int main(void) {
-    tuple* tuples = malloc(SAMPLE_SIZE * sizeof(tuple));
-    for (int i=0; i<SAMPLE_SIZE; i++) {
-        tuples[i].key = i;
-        tuples[i].payload = rand() % 1000;
-        //printf("hash for %d: %u\n", tuples[i].payload, hash2(tuples[i].payload, 100)); // test for hash2
-    }
     relation relA;
-    relA.num_tuples = SAMPLE_SIZE;
-    relA.tuples = tuples;
+    read_file(&relA,"relation_a.txt");
     
-    tuple* tuples2 = malloc(SAMPLE_SIZE * sizeof(tuple));
-    for (int i=0; i<SAMPLE_SIZE; i++) {
-        tuples2[i].key = i;
-        tuples2[i].payload = rand() % 1000;
-        //printf("hash for %d: %u\n", tuples[i].payload, hash2(tuples[i].payload, 100)); // test for hash2
-    }
     relation relB;
-    relB.num_tuples = SAMPLE_SIZE;
-    relB.tuples = tuples2;
+    read_file(&relB,"relation_b.txt");
 
-    printf("Initial Relations:\n\n    R   S\n");
-    for (int i=0; i<SAMPLE_SIZE; i++) {
-        printf("%d: %d %d\n", i, tuples[i].payload, tuples2[i].payload);
-    }
-    printf("\n");
 
     joinfunction(relA,relB);
 
-    delete_relation(relA);
-    delete_relation(relB);
+    
 
     //=================================================================================================================
 
@@ -95,6 +75,7 @@ int main(void) {
     // delete_hashtable(table2);
 
     //=================================================================================================================
-
+    delete_relation(relA);
+    delete_relation(relB);
     return 0;
 }
