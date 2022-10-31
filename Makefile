@@ -1,7 +1,7 @@
 BUILD_DIR = ./build
 TEST_DIR = ./tests
 GCC_FLAGS = -I./include/ -Wall
-SOURCE_FILES = main.c hash1.c partition.c utils.c hashtable.c
+SOURCE_FILES = main.c hash1.c partition.c utils.c hashtable.c join.c
 OBJ_FILES = $(addprefix $(BUILD_DIR)/,$(SOURCE_FILES:.c=.o))
 
 .PHONY: clean clean_tests
