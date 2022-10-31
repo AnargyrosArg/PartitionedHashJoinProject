@@ -10,46 +10,6 @@ unsigned int hash2(unsigned int x, unsigned int max) {
 }
 
 
-// get value of n-th bit of bitmap (n=0 refers to MOST significant bit of the integer)
-int bitmap_get_bit(unsigned long long bitmap, int n) {
-    return ((bitmap << n) >> ((sizeof(unsigned long long)*__CHAR_BIT__)-1));
-}
-
-// set n-th bit of bitmap (n=0 refers to MOST significant bit of the integer)
-void bitmap_set_bit(unsigned long long* bitmap, int n, int value) {
-    if (value == 1) *bitmap = (1 << ((sizeof(unsigned long long)*__CHAR_BIT__)-n-1)) | (*bitmap);
-    if (value == 0) *bitmap = *bitmap & (~(1 << ((sizeof(unsigned long long)*__CHAR_BIT__)-n-1)));
-}
-
-// returns 0 or 1 depending on whether bitmap is full (aka when everything is 1)
-int bitmap_full(unsigned long long bitmap, int size) {
-    for (int i=0; i<size; i++)
-        if (!bitmap_get_bit(bitmap, i))
-            return 0;
-    return 1;
-}
-
-
-// insert element to array, expand array if it is full
-int* insert_array(int* array, int* pos, int* size, int data) {
-    if ((*pos) <= ((*size)-1)) { // if array is not full
-        array[*pos] = data;
-        (*pos) += 1;
-        return array;
-    }
-    else { // if array is full
-        int* new_array = malloc(sizeof(int) * (*size)*2);
-        for (int i=0; i<(*size); i++)
-            new_array[i] = array[i];
-        new_array[*pos] = data;
-        (*pos) += 1;
-        (*size) *= 2;
-        free(array);
-        return new_array;
-    }
-}
-
-
 // prints hash table, for debug purposes
 void print_hashtable(hashtable* table) {
     printf("\n---------------------------\n");
@@ -79,29 +39,6 @@ hashbucket* init_hashbucket(int n) {
 }
 
 
-// swaps payload of buckets and updates bitmap (assumes first bucket is empty, so this should only be used for hopscotch)
-// "bit" shows which bit of the bitmap to nullify
-void bucket_swap(hashtable* table, int empty_bucket, int other_bucket, int bit) {
-    int final_bucket = ((other_bucket + bit) % table->tablesize);
-    int final_bit = empty_bucket-other_bucket;
-    if (final_bit < 0) final_bit = (table->tablesize - other_bucket) + empty_bucket;
-    int* empty_rowids = table->htbuckets[empty_bucket]->rowids;
-
-    table->htbuckets[empty_bucket]->rowids = table->htbuckets[final_bucket]->rowids;
-    table->htbuckets[empty_bucket]->key = table->htbuckets[final_bucket]->key;
-    table->htbuckets[empty_bucket]->rowids_pos = table->htbuckets[final_bucket]->rowids_pos;
-    table->htbuckets[empty_bucket]->rowids_size = table->htbuckets[final_bucket]->rowids_size;
-
-    table->htbuckets[final_bucket]->rowids = empty_rowids;
-    table->htbuckets[final_bucket]->key = 0;
-    table->htbuckets[final_bucket]->rowids_pos = 0;
-    table->htbuckets[final_bucket]->rowids_size = table->nbsize;
-
-    bitmap_set_bit(&table->htbuckets[other_bucket]->bitmap, bit, 0);
-    bitmap_set_bit(&table->htbuckets[other_bucket]->bitmap, final_bit, 1);
-}
-
-
 // initialize hash table
 hashtable *init_hashtable(int n, int H) {
     // input check
@@ -126,6 +63,29 @@ hashtable *init_hashtable(int n, int H) {
     for (int i=0; i<ht->tablesize; i++)
         ht->htbuckets[i] = init_hashbucket(H);
     return ht;
+}
+
+
+// swaps payload of buckets and updates bitmap (assumes first bucket is empty, so this should only be used for hopscotch)
+// "bit" shows which bit of the bitmap to nullify
+void bucket_swap(hashtable* table, int empty_bucket, int other_bucket, int bit) {
+    int final_bucket = ((other_bucket + bit) % table->tablesize);
+    int final_bit = empty_bucket-other_bucket;
+    if (final_bit < 0) final_bit = (table->tablesize - other_bucket) + empty_bucket;
+    int* empty_rowids = table->htbuckets[empty_bucket]->rowids;
+
+    table->htbuckets[empty_bucket]->rowids = table->htbuckets[final_bucket]->rowids;
+    table->htbuckets[empty_bucket]->key = table->htbuckets[final_bucket]->key;
+    table->htbuckets[empty_bucket]->rowids_pos = table->htbuckets[final_bucket]->rowids_pos;
+    table->htbuckets[empty_bucket]->rowids_size = table->htbuckets[final_bucket]->rowids_size;
+
+    table->htbuckets[final_bucket]->rowids = empty_rowids;
+    table->htbuckets[final_bucket]->key = 0;
+    table->htbuckets[final_bucket]->rowids_pos = 0;
+    table->htbuckets[final_bucket]->rowids_size = table->nbsize;
+
+    bitmap_set_bit(&table->htbuckets[other_bucket]->bitmap, bit, 0);
+    bitmap_set_bit(&table->htbuckets[other_bucket]->bitmap, final_bit, 1);
 }
 
 
