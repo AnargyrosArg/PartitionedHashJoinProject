@@ -1,4 +1,5 @@
 #include "hashtable.h"
+#include <limits.h>
 
 // hash function for hash table. Max limits output range
 unsigned int hash2(unsigned int x, unsigned int max) {
@@ -10,18 +11,18 @@ unsigned int hash2(unsigned int x, unsigned int max) {
 
 
 // get value of n-th bit of bitmap (n=0 refers to MOST significant bit of the integer)
-int bitmap_get_bit(unsigned int bitmap, int n) {
-    return ((bitmap << n) >> (__INT_WIDTH__-1));
+int bitmap_get_bit(unsigned long long bitmap, int n) {
+    return ((bitmap << n) >> ((sizeof(unsigned long long)*__CHAR_BIT__)-1));
 }
 
 // set n-th bit of bitmap (n=0 refers to MOST significant bit of the integer)
-void bitmap_set_bit(unsigned int* bitmap, int n, int value) {
-    if (value == 1) *bitmap = (1 << (__INT_WIDTH__-n-1)) | (*bitmap);
-    if (value == 0) *bitmap = *bitmap & (~(1 << (__INT_WIDTH__-n-1)));
+void bitmap_set_bit(unsigned long long* bitmap, int n, int value) {
+    if (value == 1) *bitmap = (1 << ((sizeof(unsigned long long)*__CHAR_BIT__)-n-1)) | (*bitmap);
+    if (value == 0) *bitmap = *bitmap & (~(1 << ((sizeof(unsigned long long)*__CHAR_BIT__)-n-1)));
 }
 
 // returns 0 or 1 depending on whether bitmap is full (aka when everything is 1)
-int bitmap_full(unsigned int bitmap, int size) {
+int bitmap_full(unsigned long long bitmap, int size) {
     for (int i=0; i<size; i++)
         if (!bitmap_get_bit(bitmap, i))
             return 0;
@@ -37,7 +38,6 @@ int* insert_array(int* array, int* pos, int* size, int data) {
         return array;
     }
     else { // if array is full
-        printf("new array boysss\n");
         int* new_array = malloc(sizeof(int) * (*size)*2);
         for (int i=0; i<(*size); i++)
             new_array[i] = array[i];
@@ -107,6 +107,11 @@ hashtable *init_hashtable(int n, int H) {
     // input check
     if (H > n) {
         printf("init_hashtable error: hash table size cannot be greater than neighbouhood\n");
+        return NULL;
+    }
+
+    if (H > (sizeof(unsigned long long)*__CHAR_BIT__)) {
+        printf("init_hashtable error: hash table size cannot be greater than %ld\n", (sizeof(unsigned long long)*__CHAR_BIT__));
         return NULL;
     }
 

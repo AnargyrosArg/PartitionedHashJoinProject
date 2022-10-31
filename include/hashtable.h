@@ -13,7 +13,7 @@ struct hashbucket {
     int* rowids; // the data the bucket holds (all the rowids related to the key)
     int rowids_size; // size of rowid array
     int rowids_pos; // shows where the next empty position is in the array
-    unsigned int bitmap; // bitmap showing which elements in the neighborhood originally hashed to this bucket
+    unsigned long long bitmap; // bitmap showing which elements in the neighborhood originally hashed to this bucket
 };
 
 struct hashtable {
@@ -23,9 +23,9 @@ struct hashtable {
 };
 
 // bitmap functions
-int bitmap_get_bit(unsigned int bitmap, int n);
-void bitmap_set_bit(unsigned int* bitmap, int n, int value);
-int bitmap_full(unsigned int bitmap, int size);
+int bitmap_get_bit(unsigned long long bitmap, int n);
+void bitmap_set_bit(unsigned long long* bitmap, int n, int value);
+int bitmap_full(unsigned long long bitmap, int size);
 
 // hash table functions
 hashbucket* init_hashbucket(int n); // creates a bucket, n is the size of the bitmap

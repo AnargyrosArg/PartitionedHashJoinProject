@@ -3,7 +3,7 @@
 #include <time.h>
 #include "join.h"
 
-#define SAMPLE_SIZE 100
+#define SAMPLE_SIZE 400
 
 int main(void) {
     tuple* tuples = malloc(SAMPLE_SIZE * sizeof(tuple));
