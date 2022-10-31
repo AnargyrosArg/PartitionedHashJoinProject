@@ -5,6 +5,52 @@
 Various utility functions
 */
 
+void read_file(relation *rela,char *name){
+    //we open the fle 
+    FILE *fl;
+	fl = fopen ( name , "r");	
+
+	if ( fl == NULL ) {
+		perror("fopen");
+		exit(1);
+	}
+    
+    //now we need to check how many tuples there are in the file 
+    int counter =0;
+    int num;
+    //while there are still numbers to be read, we increment the counter
+    while(fscanf(fl,"%d", &num) == 1){
+        counter++;
+    }
+    fclose(fl);
+
+    //we create the relation with size of the counter
+    rela->num_tuples= counter;
+
+    //now we have to create the tuples for our relation
+    tuple* tuples = malloc(counter * sizeof(tuple));
+
+    //we open the file again
+	fl = fopen ( name , "r");	
+
+	if ( fl == NULL ) {
+		perror("fopen");
+		exit(1);
+	}
+
+    int i=0;
+    for(i=0;i<counter;i++){
+        fscanf(fl,"%d", &num);
+        tuples[i].key = i;
+        tuples[i].payload = num;
+    }
+
+    rela->tuples = tuples;
+    //we close the file
+    fclose(fl);
+    return;
+}
+
 int power(int base,int exp){
     int ret=base;
     for(int i=0;i<exp-1;i++){
