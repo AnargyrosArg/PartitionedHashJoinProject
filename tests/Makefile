@@ -14,6 +14,7 @@ BUILD_DIR = ../build
 
 run_tests: $(TESTS)
 	$(foreach test,$(TESTS),@echo ==========$(test)==========$(\n)@./$(test)$(\n))
+	@echo ====================================
 
 %: %.c
 	gcc $(GCC_FLAGS) $@.c $(BUILD_DIR)/$(@:_tests=.o) -o $@

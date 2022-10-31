@@ -2,3 +2,4 @@ out
 *.o
 tests/hash1_tests
 tests/partition_tests
+.vscode/settings.json
