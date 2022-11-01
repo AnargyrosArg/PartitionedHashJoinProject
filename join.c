@@ -4,17 +4,17 @@ void joinfunction(relation r, relation s){
 
     //first we create partitions for relationship r
     partition_result partition_info = partition_relation(r, 2);
-    for(int i=0;i<partition_info.histogram_size;i++){
-        printf("partition %d begins at %d\n",i,partition_info.prefix_sum[i]);
-    }
+    // for(int i=0;i<partition_info.histogram_size;i++){
+    //     printf("partition %d begins at %d\n",i,partition_info.prefix_sum[i]);
+    // }
 
-    printf("\n\n");
+    //printf("\n\n");
 
     //we do the same for relationship s
     partition_result partition_info2 = partition_relation(s, 2);
-    for(int i=0;i<partition_info2.histogram_size;i++){
-        printf("partition %d begins at %d\n",i,partition_info2.prefix_sum[i]);
-    }
+    // for(int i=0;i<partition_info2.histogram_size;i++){
+    //     printf("partition %d begins at %d\n",i,partition_info2.prefix_sum[i]);
+    // }
 
 
     //we are going to compare the items in every partition
@@ -59,8 +59,8 @@ void joinfunction(relation r, relation s){
             tableR = insert_hashtable(tableR, rel_tobeinserted, partition_info.ordered_rel.tuples[j].key);
         }
         //print_hashtable(tableR);
-
-
+        
+        stop = partition_info2.prefix_sum[i+1];
         //if we are at the last bucket loop will stop at the end of the array
         if( i == (partition_info2.histogram_size -1)){
             stop = s.num_tuples;
@@ -73,7 +73,7 @@ void joinfunction(relation r, relation s){
             p = search_hashtable(tableR, data, &size);
             
             if(p == NULL)
-            {
+            {   
                 continue;
             }
 
@@ -81,7 +81,7 @@ void joinfunction(relation r, relation s){
             for(int k=0; k<size; k++) {
                 int rowid_s = partition_info2.ordered_rel.tuples[j].key;
                 int rowid_r = r.tuples[p[k]].key;
-                printf("%d %d ", rowid_s,rowid_r);
+                printf("%d %d\n",rowid_r+1,rowid_s+1);
             }
             printf("\n");
         }

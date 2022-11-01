@@ -2,6 +2,7 @@
 #include <limits.h>
 
 // hash function for hash table. Max limits output range
+// credit: https://stackoverflow.com/questions/664014/what-integer-hash-function-are-good-that-accepts-an-integer-hash-key
 unsigned int hash2(unsigned int x, unsigned int max) {
     x = ((x >> 16) ^ x) * 0x45d9f3b;
     x = ((x >> 16) ^ x) * 0x45d9f3b;
@@ -43,8 +44,9 @@ hashbucket* init_hashbucket(int n) {
 hashtable *init_hashtable(int n, int H) {
     // input check
     if (H > n) {
-        printf("init_hashtable error: hash table size cannot be greater than neighbouhood\n");
-        return NULL;
+        //printf("init_hashtable error: hash table size cannot be greater than neighbouhood\n");
+        //return NULL;
+        H = n;
     }
 
     if (H > (sizeof(unsigned long long)*__CHAR_BIT__)) {
