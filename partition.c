@@ -68,7 +68,7 @@ void repartition(relation* rel,int** histogram,int *depth,int* histogram_size,lo
 
 
 //returns an ordered version of relA and a prefix sum table
-//IMPORTANT: remember to free ordered relation tuples and prefix sum array
+//IMPORTANT: remember to free ordered relation tuples
 partition_result partition_relation_internal(relation rel,int depth){
     //L2 cache size,in bytes,per core
     long L2_SIZE_BYTES = 256;//sysconf(_SC_LEVEL2_CACHE_SIZE);
@@ -121,6 +121,8 @@ partition_info partition_relations(relation relA , relation relB, int depth){
 
     //if second relation requires more depth, repartition first relation with matching depth
     if(result2.depth > result1.depth){
+        delete_part_result(result1);
+        delete_relation(result1.ordered_rel);
         result1 = partition_relation_internal(relA,result2.depth);
     }
 
