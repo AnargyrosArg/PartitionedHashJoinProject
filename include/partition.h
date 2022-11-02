@@ -6,6 +6,8 @@
 #include "utils.h"
 #include "relations.h"
 
+#define MAX_PASSES 10
+
 
 typedef struct partition_result partition_result;
 

@@ -42,7 +42,7 @@ void expand_histogram(int** histogram,int* histogram_size){
 }
 
 //this function checks if any partition exceeds the L2 cache size and splits it accordingly into smaller ones
-void repartition(relation* rel,int** histogram,int *depth,int* histogram_size,long  L2_SIZE_BYTES){
+void repartition(relation* rel,int** histogram,int *depth,int* histogram_size,long  L2_SIZE_BYTES,int max_passes){
     //init histogram values to 0
     init_array(*histogram,*histogram_size,0);
 
@@ -55,10 +55,16 @@ void repartition(relation* rel,int** histogram,int *depth,int* histogram_size,lo
     for(int partition=0; partition< *histogram_size; partition++){
         //check is size larger than L2 cache
         if((*histogram)[partition]*sizeof(int)>L2_SIZE_BYTES){
-            expand_histogram(histogram,histogram_size);            
+            expand_histogram(histogram,histogram_size);       
+            
+            //increment depth
             (*depth)++;
-            //repartition with added depth
-            repartition(rel,histogram,depth,histogram_size,L2_SIZE_BYTES);
+            if(max_passes==0){
+                printf("ERROR: Maximum amount of partition passes reached, relation probably does not fit in L2 cache!\n");
+                exit(-1);
+            }
+            //repartition with incremented depth
+            repartition(rel,histogram,depth,histogram_size,L2_SIZE_BYTES,max_passes-1);
             break;
         }
     }
@@ -78,7 +84,7 @@ partition_result partition_relation_internal(relation rel,int depth){
     int histogram_size = power(2,depth);
     int* histogram = malloc(histogram_size*sizeof(int));
     
-    repartition(&rel,&histogram,&depth,&histogram_size,L2_SIZE_BYTES);
+    repartition(&rel,&histogram,&depth,&histogram_size,L2_SIZE_BYTES,MAX_PASSES);
     
     int *prefix_sum = malloc(histogram_size * sizeof(int));
     int sum=0;
