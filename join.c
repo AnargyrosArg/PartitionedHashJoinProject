@@ -2,18 +2,15 @@
 
 void joinfunction(relation r, relation s){
 
-    //first we create partitions for relationship r
-    partition_info info = partition_relations(r, s,2);
+    //first we create partitions for relationship r,s
+    partition_info info = partition_relations(r, s , 2);
     partition_result partition_info = info.relA_info;
     partition_result partition_info2 = info.relB_info;
 
     for(int i=0;i<partition_info.histogram_size;i++){
         printf("partition %d begins at %d and has %d elements\n",i,partition_info.prefix_sum[i],partition_info.partition_sizes[i]);
     }
-
     printf("\n\n");
-
-    //we do the same for relationship s
     for(int i=0;i<partition_info2.histogram_size;i++){
         printf("partition %d begins at %d and has %d elements\n",i,partition_info2.prefix_sum[i],partition_info2.partition_sizes[i]);
     }
@@ -83,6 +80,7 @@ void joinfunction(relation r, relation s){
     delete_relation(partition_info.ordered_rel);
     delete_relation(partition_info2.ordered_rel);
     delete_part_info(info);
+
     return;
 
 }

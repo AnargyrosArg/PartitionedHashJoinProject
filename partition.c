@@ -29,13 +29,13 @@ void delete_part_info(partition_info info){
 void expand_histogram(int** histogram,int* histogram_size){
     int* new_histogram = malloc(2*(*histogram_size)*sizeof(int));
 
-    for(int i=0;i<2*(*histogram_size);i++){
-        if(i< *histogram_size){
-            new_histogram[i]=(*histogram)[i];
-        }else{
-            new_histogram[i]=0;
-        }
-    }
+    // for(int i=0;i<2*(*histogram_size);i++){
+    //     if(i< *histogram_size){
+    //         new_histogram[i]=(*histogram)[i];
+    //     }else{
+    //         new_histogram[i]=0;
+    //     }
+    // }
     *histogram_size = 2*(*histogram_size);
     free(*histogram);
     *histogram = new_histogram;
