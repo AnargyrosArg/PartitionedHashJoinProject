@@ -3,36 +3,30 @@
 void joinfunction(relation r, relation s){
 
     //first we create partitions for relationship r
-    partition_result partition_info = partition_relation(r, 2);
-    // for(int i=0;i<partition_info.histogram_size;i++){
-    //     printf("partition %d begins at %d\n",i,partition_info.prefix_sum[i]);
-    // }
+    partition_info info = partition_relations(r, s,2);
+    partition_result partition_info = info.relA_info;
+    partition_result partition_info2 = info.relB_info;
 
-    //printf("\n\n");
+    for(int i=0;i<partition_info.histogram_size;i++){
+        printf("partition %d begins at %d and has %d elements\n",i,partition_info.prefix_sum[i],partition_info.partition_sizes[i]);
+    }
+
+    printf("\n\n");
 
     //we do the same for relationship s
-    partition_result partition_info2 = partition_relation(s, 2);
-    // for(int i=0;i<partition_info2.histogram_size;i++){
-    //     printf("partition %d begins at %d\n",i,partition_info2.prefix_sum[i]);
-    // }
+    for(int i=0;i<partition_info2.histogram_size;i++){
+        printf("partition %d begins at %d and has %d elements\n",i,partition_info2.prefix_sum[i],partition_info2.partition_sizes[i]);
+    }
 
 
     //we are going to compare the items in every partition
     int i=0;
     for(i=0;i<partition_info.histogram_size;i++){
+        
 
-        int bucketsizeA = r.num_tuples - partition_info.prefix_sum[i];
-        int bucketsizeB = s.num_tuples - partition_info2.prefix_sum[i];
-
-        //first we have to check if bucket is empty on one or both of relationships, if yes there is nothing to compare and we go to the next one
-        //if we are at the last bucket the number of items inside the bucket is equal to the number of tuples minus the prefix sum[i]
-        if( i < (partition_info.histogram_size -1)){
-            bucketsizeA = partition_info.prefix_sum[i+1] - partition_info.prefix_sum[i];
-            bucketsizeB = partition_info2.prefix_sum[i+1] - partition_info2.prefix_sum[i];
-        }
-            
-       // printf("%d %d\n", bucketsizeA ,bucketsizeB);
-
+        int bucketsizeA = partition_info.partition_sizes[i];//r.num_tuples - partition_info.prefix_sum[i];
+        int bucketsizeB = partition_info2.partition_sizes[i];//s.num_tuples - partition_info2.prefix_sum[i];
+        //skip empty buckets
         if(bucketsizeA == 0 || bucketsizeB == 0 ){
             //printf("empty bucket! Continuing...\n");
             continue;
@@ -46,27 +40,20 @@ void joinfunction(relation r, relation s){
         //print_hashtable(tableR);
 
         //now that we created our hashtable we want to insert every tuple of the partition into the hashtable 
-        int j;
-        int stop = partition_info.prefix_sum[i+1];
-        //if we are at the last bucket loop will stop at the end of the array
-        if( i == (partition_info.histogram_size -1)){
-            stop = r.num_tuples;
-        }
+        
+        int stop = partition_info.prefix_sum[i] + partition_info.partition_sizes[i];
 
         //we start putting the j-th item of our ordered r, as the prefix sum shows
-        for( j = partition_info.prefix_sum[i]; j<stop; j++ ){
+        for(int j = partition_info.prefix_sum[i]; j<stop; j++ ){
             int rel_tobeinserted = partition_info.ordered_rel.tuples[j].payload;
             tableR = insert_hashtable(tableR, rel_tobeinserted, partition_info.ordered_rel.tuples[j].key);
         }
         //print_hashtable(tableR);
         
-        stop = partition_info2.prefix_sum[i+1];
-        //if we are at the last bucket loop will stop at the end of the array
-        if( i == (partition_info2.histogram_size -1)){
-            stop = s.num_tuples;
-        }
+        stop = partition_info2.prefix_sum[i] + partition_info2.partition_sizes[i];
+       
         //now that our hashtable is ready, all we have to do is the join for every tuple in bucket in rel S
-        for(j = partition_info2.prefix_sum[i]; j<stop; j++){
+        for(int j = partition_info2.prefix_sum[i]; j<stop; j++){
             int data = partition_info2.ordered_rel.tuples[j].payload, size = 0;
             int* p;
 
@@ -95,9 +82,7 @@ void joinfunction(relation r, relation s){
     //we free all the memory at last
     delete_relation(partition_info.ordered_rel);
     delete_relation(partition_info2.ordered_rel);
-    free(partition_info.prefix_sum);
-    free(partition_info2.prefix_sum);
+    delete_part_info(info);
     return;
 
-    
 }
