@@ -5,15 +5,19 @@
 - Ανάργυρος Αργυρός - sdi1900014
 
 
-## Compiling & Running:
+## Compiling:
 ------
 To compile project:
 
     make
 
-The executable is named ./out
+## Running:
+------
+The executable is named ./out and it expects 2 newline separated value files as parameters
 
-# **TODO Mention executables' parameters if any**
+    ./out <filename1> <filename2>
+eg: ./out relation_a.txt relation_b.txt
+
 
 ## Testing:
 ------

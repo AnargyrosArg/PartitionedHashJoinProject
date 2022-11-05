@@ -1,20 +1,22 @@
 #include "join.h"
 
-void joinfunction(relation r, relation s){
+
+result joinfunction(relation r, relation s){
+    result ret;
+    init_result(&ret);
 
     //first we create partitions for relationship r,s
     partition_info info = partition_relations(r, s , 2);
     partition_result partition_info = info.relA_info;
     partition_result partition_info2 = info.relB_info;
 
-    for(int i=0;i<partition_info.histogram_size;i++){
-        printf("partition %d begins at %d and has %d elements\n",i,partition_info.prefix_sum[i],partition_info.partition_sizes[i]);
-    }
-    printf("\n\n");
-    for(int i=0;i<partition_info2.histogram_size;i++){
-        printf("partition %d begins at %d and has %d elements\n",i,partition_info2.prefix_sum[i],partition_info2.partition_sizes[i]);
-    }
-
+    // for(int i=0;i<partition_info.histogram_size;i++){
+    //     printf("partition %d begins at %d and has %d elements\n",i,partition_info.prefix_sum[i],partition_info.partition_sizes[i]);
+    // }
+    // printf("\n\n");
+    // for(int i=0;i<partition_info2.histogram_size;i++){
+    //     printf("partition %d begins at %d and has %d elements\n",i,partition_info2.prefix_sum[i],partition_info2.partition_sizes[i]);
+    // }
 
     //we are going to compare the items in every partition
     int i=0;
@@ -63,11 +65,13 @@ void joinfunction(relation r, relation s){
 
             //printf("for payload:%d\n", data);
             for(int k=0; k<size; k++) {
-                int rowid_s = partition_info2.ordered_rel.tuples[j].key;
-                int rowid_r = r.tuples[p[k]].key;
-                printf("%d %d\n",rowid_r+1,rowid_s+1);
+                pair pair;
+
+                pair.key2 = partition_info2.ordered_rel.tuples[j].key;
+                pair.key1 = r.tuples[p[k]].key;
+                pair.payload = r.tuples[p[k]].payload;
+                add_result(&ret,pair);
             }
-            printf("\n");
         }
 
 
@@ -81,6 +85,6 @@ void joinfunction(relation r, relation s){
     delete_relation(partition_info2.ordered_rel);
     delete_part_info(info);
 
-    return;
+    return ret;
 
 }
