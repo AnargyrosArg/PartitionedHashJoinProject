@@ -77,7 +77,7 @@ void repartition(relation* rel,int** histogram,int *depth,int* histogram_size,lo
 //IMPORTANT: remember to free ordered relation tuples
 partition_result partition_relation_internal(relation rel,int depth){
     //L2 cache size,in bytes,per core
-    long L2_SIZE_BYTES = 256;//sysconf(_SC_LEVEL2_CACHE_SIZE);
+    long L2_SIZE_BYTES = sysconf(_SC_LEVEL2_CACHE_SIZE);//256;
 
     //Our histograms are int arrays where the index is the bucket hash value and the number pointed to
     //by the index is the number of occurences , size is 2^n
