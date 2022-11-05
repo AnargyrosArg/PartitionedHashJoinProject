@@ -5,12 +5,18 @@
 
 #define SAMPLE_SIZE 500
 
-int main(void) {
+int main(int argc, char** argv) {
+    if(argc != 3){
+        printf("Invalid Arguements\n");
+        return 1;
+    }
     relation relA;
-    read_file(&relA,"relation_a.txt");
+
+
+    read_file(&relA,argv[1]);
     
     relation relB;
-    read_file(&relB,"relation_b.txt");
+    read_file(&relB,argv[2]);
 
 
     joinfunction(relA,relB);
