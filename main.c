@@ -12,10 +12,7 @@ int main(void) {
     relation relB;
     read_file(&relB,"relation_b.txt");
 
-
     joinfunction(relA,relB);
-
-    
 
     //=================================================================================================================
 
