@@ -22,6 +22,9 @@ run_tests: $(TESTS)
 partition_tests: partition_tests.c
 	gcc $(GCC_FLAGS) $@.c $(BUILD_DIR)/$(@:_tests=.o) $(BUILD_DIR)/utils.o $(BUILD_DIR)/hash1.o   -o $@
 
+join_tests: join_tests.c
+	gcc $(GCC_FLAGS) $@.c $(BUILD_DIR)/$(@:_tests=.o) $(BUILD_DIR)/hash1.o $(BUILD_DIR)/partition.o $(BUILD_DIR)/utils.o $(BUILD_DIR)/hashtable.o $(BUILD_DIR)/relations.o -o $@
+
 test_%: %_tests
 	@./$^
 

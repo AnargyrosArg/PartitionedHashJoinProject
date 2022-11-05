@@ -24,7 +24,8 @@
         "utils.h": "c",
         "hashtable.h": "c",
         "hash1.h": "c",
-        "acutest.h": "c"
+        "acutest.h": "c",
+        "join.h": "c"
     },
     "makefile.launchConfigurations": [
         {
