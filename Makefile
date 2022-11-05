@@ -1,8 +1,10 @@
 BUILD_DIR = ./build
 TEST_DIR = ./tests
+SRC_DIR = ./src
 GCC_FLAGS = -I./include/ -Wall -O3
 SOURCE_FILES = main.c hash1.c partition.c utils.c hashtable.c join.c
 OBJ_FILES = $(addprefix $(BUILD_DIR)/,$(SOURCE_FILES:.c=.o))
+
 
 .PHONY: clean clean_tests
 
@@ -11,7 +13,7 @@ out: $(BUILD_DIR) $(OBJ_FILES)
 	gcc $(GCC_FLAGS) $(BUILD_DIR)/*.o -o out
 
 #Compiles each source file into its object file individually 
-$(BUILD_DIR)/%.o : %.c
+$(BUILD_DIR)/%.o : $(SRC_DIR)/%.c
 	gcc $(GCC_FLAGS) -c $< -o $@
 
 #Rule to run all tests , there is a separate Makefile in the tests directory that we simply run 
