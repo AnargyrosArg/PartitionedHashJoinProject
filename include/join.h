@@ -9,4 +9,4 @@
 #include "partition.h"
 
 
-void joinfunction(relation r, relation s);
+result joinfunction(relation r, relation s);
