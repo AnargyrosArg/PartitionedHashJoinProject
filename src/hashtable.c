@@ -4,6 +4,7 @@
 // hash function for hash table. Max limits output range
 // credit: https://stackoverflow.com/questions/664014/what-integer-hash-function-are-good-that-accepts-an-integer-hash-key
 unsigned int hash2(unsigned int x, unsigned int max) {
+    if (max == 0) return 0; // max must be greater than 0
     x = ((x >> 16) ^ x) * 0x45d9f3b;
     x = ((x >> 16) ^ x) * 0x45d9f3b;
     x = (x >> 16) ^ x;
@@ -187,7 +188,6 @@ hashtable* insert_hashtable(hashtable* table, int key, int data) {
 // double size of table and re-insert everything ("cause value is the value that caused the rehash. It will be inserted after")
 void rehash_hashtable(hashtable **ht, int cause_key, int cause_data) {
     int original_size = (*ht)->tablesize;
-    printf("\nRehashing\n");
 
     hashtable *ht2 = init_hashtable(original_size, (*ht)->nbsize); // "init_hashtable" initializes table with 2*original_size
 
