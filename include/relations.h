@@ -44,5 +44,4 @@ struct result{
 
 void init_result(result* res);
 void add_result(result* res, pair p);
-
-
+void delete_result(result* res);

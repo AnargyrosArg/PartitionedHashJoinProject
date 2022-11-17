@@ -2,7 +2,7 @@ BUILD_DIR = ./build
 TEST_DIR = ./tests
 SRC_DIR = ./src
 GCC_FLAGS = -I./include/ -Wall -O3
-SOURCE_FILES = main.c hash1.c partition.c utils.c hashtable.c join.c relations.c
+SOURCE_FILES = main.c hash1.c partition.c utils.c hashtable.c join.c relations.c parser.c
 OBJ_FILES = $(addprefix $(BUILD_DIR)/,$(SOURCE_FILES:.c=.o))
 
 

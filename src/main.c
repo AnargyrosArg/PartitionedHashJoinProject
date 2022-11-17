@@ -21,6 +21,7 @@ int main(int argc, char** argv) {
         printf("%d - %d with value: %d\n",res.pairs[i].key1,res.pairs[i].key2,res.pairs[i].payload);
     }
     printf("result capacity %d ,  result size %d\n",res.capacity,res.result_size);
+    delete_result(&res);
     delete_relation(relA);
     delete_relation(relB);
     return 0;

@@ -5,3 +5,5 @@ tests/partition_tests
 .vscode/settings.json
 partition_old.c
 tests/join_tests
+tests/hashtable_tests
+tests/parser_tests
