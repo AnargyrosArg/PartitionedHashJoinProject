@@ -9,6 +9,10 @@ void init_result(result* res){
     res->pairs = malloc(INITIAL_RESULT_CAPACITY * sizeof(pair));
 }
 
+void delete_result(result* res){
+    free(res->pairs);
+}
+
 void add_result(result* res,pair p){
     //if we reached max capacity , reallocate new,larger space and copy old values over
     if(res->capacity == res->result_size){

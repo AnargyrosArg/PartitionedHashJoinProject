@@ -80,6 +80,27 @@ void append_to_list_select(SelectionInfo** head,SelectionInfo* node){
   	return;
 }
 
+void query_info_delete(QueryInfo* qinfo){
+    qinfo->num_rels = 0 ;
+    
+    while(qinfo->joins){
+        JoinInfo* temp = qinfo->joins;
+        qinfo->joins = qinfo->joins->next;
+        free(temp);
+    }
+    while(qinfo->filters){
+        FilterInfo* temp = qinfo->filters;
+        qinfo->filters = qinfo->filters->next;
+        free(temp);
+    }
+    while(qinfo->projections){
+        SelectionInfo* temp = qinfo->projections;
+        qinfo->projections = qinfo->projections->next;
+        free(temp);
+    }
+    return;
+}
+
 
 void query_info_init(QueryInfo* qinfo){
     qinfo->filters=NULL;
@@ -87,12 +108,6 @@ void query_info_init(QueryInfo* qinfo){
     qinfo->projections=NULL;
 
     qinfo->num_rels = 0;
-}
-
-void query_info_delete(QueryInfo* qinfo){
-    //TODO PROPERLY FREE LISTS
-
-    qinfo->num_rels=0;
 }
 
 int parse_relation(char* query,QueryInfo* qinfo,int index){
