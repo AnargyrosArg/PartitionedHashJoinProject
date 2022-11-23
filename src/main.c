@@ -3,26 +3,20 @@
 #include <time.h>
 #include "join.h"
 
+
+table* tables;
+
+
 int main(int argc, char** argv) {
-    if(argc != 3){
-        printf("Invalid Arguements\n");
-        return 1;
-    }
     
-    relation relA;
-    read_file(&relA,argv[1]);
-    
-    relation relB;
-    read_file(&relB,argv[2]);
+    table ret = load_relation("workloads/small/r1");
 
-    result res = joinfunction(relA,relB);
-
-    for(int i=0; i<res.result_size ;i++){
-        printf("%d - %d with value: %d\n",res.pairs[i].key1,res.pairs[i].key2,res.pairs[i].payload);
+    for(uint64_t tuple=0;tuple<ret.num_tuples;tuple++){
+        for(uint64_t column=0;column<ret.num_colums;column++){
+            printf("%ld|",ret.table[column][tuple]);
+        }
+        printf("\n");
     }
-    printf("result capacity %d ,  result size %d\n",res.capacity,res.result_size);
-    delete_result(&res);
-    delete_relation(relA);
-    delete_relation(relB);
-    return 0;
+
+    delete_table(&ret);
 }
