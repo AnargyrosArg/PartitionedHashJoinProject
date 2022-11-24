@@ -61,3 +61,4 @@ void delete_result(result* res);
 
 table load_relation(const char* filename);
 void delete_table(table*);
+void print_table(table);

@@ -41,15 +41,12 @@ table load_relation(const char* filename){
         perror("fopen");
         exit(-1);
     }
-    printf("opened file!\n");
     //go to end of file
     fseek(fp, 0L, SEEK_END);
     //position is size
     int size = ftell(fp);
     //go back to beginning 
     fseek(fp, 0L, SEEK_SET);
-    printf("got size!\n");
-
     char* addr=(char*)(mmap(NULL,size,PROT_READ,MAP_PRIVATE,fileno(fp),0u));
     if (addr==MAP_FAILED) {
         perror("cannot mmap ");
@@ -80,4 +77,13 @@ table load_relation(const char* filename){
 
 void delete_table(table* table){
     free(table->table);
+}
+
+void print_table(table t){
+    for(uint64_t tuple=0;tuple<t.num_tuples;tuple++){
+        for(uint64_t column=0;column<t.num_colums;column++){
+            printf("%ld|",t.table[column][tuple]);
+        }
+        printf("\n");
+    }
 }
