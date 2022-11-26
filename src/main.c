@@ -9,9 +9,6 @@
 #define MAX_N_TABLES 25
 #define MAX_N_QUERIES 50
 
-
-
-
 int main(int argc, char** argv) {
     //consider making these global for easy access
     //array that keeps the input relations
@@ -30,11 +27,12 @@ int main(int argc, char** argv) {
     size_t line_max_size = MAX_LINE_SIZE;
     int n_read;
 
-
     //parse relation names and load them into memory
     while((n_read=getline(&line,&line_max_size,stdin))>0){
-        //remove newline
-        line[strlen(line)-1] = 0;
+        //remove newline and carriage return for the last 2 chars
+        for (int i=0; i<2; i++)
+            if ((line[strlen(line)-1] == 10) || (line[strlen(line)-1] == 13))
+                line[strlen(line)-1] = 0;
         if (strcmp(line,"Done")==0) break;
         //store table
         tables[n_tables++]=load_relation(line);
@@ -42,9 +40,11 @@ int main(int argc, char** argv) {
 
     //parse batch of queries
     while ((n_read=getline(&line,&line_max_size,stdin))>0) {
-        //remove newline
-        line[strlen(line)-1] = 0;
-        if (strcmp(line,"F")==0) continue;; // End of a batch
+        //remove newline and carriage return for the last 2 chars
+        for (int i=0; i<2; i++)
+            if ((line[strlen(line)-1] == 10) || (line[strlen(line)-1] == 13))
+                line[strlen(line)-1] = 0;
+        if (strcmp(line,"F")==0) continue; // End of a batch
         parse_query(line,&(queries[n_queries++]));
     }
 
@@ -54,6 +54,7 @@ int main(int argc, char** argv) {
  
     //free input buffer
     free(line);
+    
     //free tables mem
     for(int i =0;i<n_tables;i++){
         delete_table(&(tables[i]));

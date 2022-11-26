@@ -33,5 +33,6 @@
             "binaryPath": "/home/anarg/workspace/project/out",
             "binaryArgs": []
         }
-    ]
+    ],
+    "C_Cpp.errorSquiggles": "disabled"
 }
