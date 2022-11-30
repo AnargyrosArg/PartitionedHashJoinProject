@@ -1,5 +1,7 @@
+workloads/small/r0
 workloads/small/r1
 workloads/small/r2
+workloads/small/r3
 Done
 3 0 1|0.2=1.0&0.1=2.0&0.2>3499|1.2 0.1
 5 0|0.2=1.0&0.3=9881|1.1 0.2 1.0
