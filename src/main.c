@@ -51,6 +51,7 @@ int main(int argc, char** argv) {
 
     for(int i =0;i<n_queries;i++){
         print_query_info(queries[i]);
+        printf("\n");
     }
     free(line);
 
@@ -111,7 +112,8 @@ int main(int argc, char** argv) {
 
     //===================================================================================
     
-    exec_query(&queries[0],tables);
+    for (int i=0; i<n_queries; i++)
+        exec_query(&queries[i],tables);
 
     //free tables mem
     for(int i =0;i<n_tables;i++){

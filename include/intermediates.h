@@ -21,8 +21,8 @@ struct Intermediate {
 
 Intermediates* init_intermediates(size_t relation_count);
 Intermediate* init_intermediate(size_t relation_count);
-void delete_intermediates(Intermediates* intermediates);
-void delete_intermediate(Intermediate* intermediate);
+void delete_intermediates(Intermediates** intermediates);
+void delete_intermediate(Intermediate** intermediate);
 Intermediates* insert_intermediates_filter(Intermediates* intermediates, relation* rel, uint relation_index);
 void print_intermediates(Intermediates* intermediates);
 void get_intermediates(Intermediates* intermediates, uint relation_index, int** ret, int* ret_len);
