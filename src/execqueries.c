@@ -1,7 +1,7 @@
 #include "execqueries.h" 
 
 
-
+//function that prints the sum of one projection
 void printsum(int rel, int column, Intermediates* inter, table *tabl){
     uint64_t sum =0;
 
@@ -21,10 +21,7 @@ void printsum(int rel, int column, Intermediates* inter, table *tabl){
         //printf("value %d is %lu ",i,sum);
     }
 
-    printf("sum of column %d of relation %d is %lu\n",column,rel,sum);
-
-    //we free the memory of the rowidarray
-    free(rowidarray);
+    printf("%lu ",sum);
 
     return;
 }
@@ -175,13 +172,22 @@ void exec_query(QueryInfo *query, table* tabl){
         //we free the memory of relations each time
         free(prejoined_relation1.tuples);
         free(prejoined_relation2.tuples);
-    
-
-
     }
-    print_intermediates(intermediates);
 
+    //now that we finished with the joins and the filter all we have to do is do the projections and print the sum
+    //we pass all the projection list till the end
+    while(query->projections != NULL){
+        int projrel = query->projections->rel_id;
+        int projcol = query->projections->col_id;
+        //we get the actual relation from the table
+        int actualid = query->rel_ids[projrel];
+        //now we just run the sum function for every projection
+        printsum(projrel, projcol, intermediates,&tabl[actualid]);
+        //we move on to the next projection
+        query->projections = query->projections->next;
+    }
 
+    printf("\n");
 
 
     delete_intermediates(intermediates);

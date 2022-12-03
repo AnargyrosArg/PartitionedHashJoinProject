@@ -111,7 +111,7 @@ int main(int argc, char** argv) {
 
     //===================================================================================
     
-    exec_query(&queries[1],tables);
+    exec_query(&queries[0],tables);
 
     //free tables mem
     for(int i =0;i<n_tables;i++){
