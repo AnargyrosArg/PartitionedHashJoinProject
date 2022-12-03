@@ -211,3 +211,12 @@ void exec_query(QueryInfo *query, table* tabl){
     delete_intermediates(&intermediates);
     return;
 }
+
+//function that executes all the queries
+void exec_all_queries(QueryInfo *queries,table *tabl,uint num_queries){
+
+    for (int i=0;i<num_queries;i++){
+        exec_query(&queries[i],tabl);
+    }
+    return;
+}
