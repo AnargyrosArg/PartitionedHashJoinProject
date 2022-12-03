@@ -21,7 +21,13 @@ void printsum(int rel, int column, Intermediates* inter, table *tabl){
         //printf("value %d is %lu ",i,sum);
     }
 
-    printf("%lu ",sum);
+    //if the sum is equal to 0 then we print NULL
+    if(sum == 0){
+        printf("NULL ");
+    }
+    else{
+        printf("%lu ",sum);
+    }
 
     return;
 }
