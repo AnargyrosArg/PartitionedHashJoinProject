@@ -4,7 +4,6 @@
 
 #include "relations.h"
 #include "utils.h"
-#include "join.h"
 #include "execqueries.h"
 
 #define MAX_LINE_SIZE 50

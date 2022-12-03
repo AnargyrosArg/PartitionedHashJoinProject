@@ -94,8 +94,96 @@ void exec_query(QueryInfo *query, table* tabl){
         free(prefiltered_relation.tuples);
         free(filtered_relation.tuples);
 
-        print_intermediates(intermediates);
     }
+
+    //now we continue with the joins
+    //we pass all the join list till the end
+    while(query->joins !=NULL){
+        int rel1 = query->joins->left.rel_id;
+        int rel2 = query->joins->right.rel_id;
+        int col1 = query->joins->left.col_id;
+        int col2 = query->joins->right.col_id;
+
+        //we have to get the actual realtion from the table, remember that the int rel is the id of the relation in the query, not the actual id of the relation in the table
+        int actualid1 = query->rel_ids[rel1];
+        int actualid2 = query->rel_ids[rel2];
+
+        //now we create the relations that will be joined
+        //first we check if they exist in the intermediates
+        int *rowidarray1;
+        int numrows1;
+        get_intermediates(intermediates, rel1, &rowidarray1, &numrows1);
+
+        int *rowidarray2;
+        int numrows2;
+        get_intermediates(intermediates, rel2, &rowidarray2, &numrows2);
+
+        relation prejoined_relation1;
+        relation prejoined_relation2;
+        
+        //if they don't exist at the intermediate we create them from the table
+        //first for the first relation
+        int i=0;
+        if(rowidarray1 == NULL){
+            tuple *tuples1 = malloc(tabl[actualid1].num_tuples * sizeof(tuple));
+            for (i=0;i<tabl[actualid1].num_tuples;i++){
+                tuples1[i].key = i;
+                tuples1[i].payload = tabl[actualid1].table[col1][i];
+            }
+            prejoined_relation1.tuples = tuples1;
+            prejoined_relation1.num_tuples = tabl[actualid1].num_tuples;
+        }
+        else{
+            tuple *tuples1 = malloc(numrows1 * sizeof(tuple));
+            for (i=0;i<numrows1;i++){
+                tuples1[i].key = rowidarray1[i];
+                tuples1[i].payload = tabl[actualid1].table[col1][rowidarray1[i]];
+            }
+            prejoined_relation1.tuples = tuples1;
+            prejoined_relation1.num_tuples = numrows1;
+        }
+
+        //now for the second relation
+        if(rowidarray2 == NULL){
+            tuple *tuples2 = malloc(tabl[actualid2].num_tuples * sizeof(tuple));
+            for (i=0;i<tabl[actualid2].num_tuples;i++){
+                tuples2[i].key = i;
+                tuples2[i].payload = tabl[actualid2].table[col2][i];
+            }
+            prejoined_relation2.tuples = tuples2;
+            prejoined_relation2.num_tuples = tabl[actualid2].num_tuples;
+        }
+        else{
+            tuple *tuples2 = malloc(numrows2 * sizeof(tuple));
+            for (i=0;i<numrows2;i++){
+                tuples2[i].key = rowidarray2[i];
+                tuples2[i].payload = tabl[actualid2].table[col2][rowidarray2[i]];
+            }
+            prejoined_relation2.tuples = tuples2;
+            prejoined_relation2.num_tuples = numrows2;
+        }
+
+        //now we join the relations
+        result joinres = joinfunction(prejoined_relation1, prejoined_relation2);
+        uint indexes[] = {rel1, rel2};
+        //we add the joined relation to the intermediates
+        intermediates = insert_intermediates_join(intermediates, &joinres, indexes);
+
+        //we coninue to the next join
+        query->joins = query->joins->next;
+
+        //we free the memory of relations each time
+        free(prejoined_relation1.tuples);
+        free(prejoined_relation2.tuples);
+    
+
+
+    }
+    print_intermediates(intermediates);
+
+
+
+
     delete_intermediates(intermediates);
     return;
 }
