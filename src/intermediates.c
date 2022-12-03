@@ -62,6 +62,9 @@ void get_intermediates(Intermediates* intermediates, uint relation_index, int** 
             return;
         }
     }
+    //if the relation is not in the intermediates we return NULL at ret and 0 as ret_size
+    *ret = NULL;
+    *ret_size = 0;
 }
 
 // inserts array of rowids into the data structure.

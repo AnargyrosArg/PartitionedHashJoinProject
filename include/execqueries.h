@@ -2,6 +2,9 @@
 #include <stdlib.h>
 
 #include "intermediates.h"
+#include "parser.h"
+#include "filter.h"
 
 
-void printsum(int rel, int column, Intermediates* inter, table *tabl);
+void printsum(int , int , Intermediates* ,table *);
+void exec_query(QueryInfo*, table*);
