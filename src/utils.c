@@ -74,13 +74,20 @@ void init_relation(relation* rel,int num_tuples){
 }
 
 void delete_relation(relation rel){
-    free(rel.tuples);
+    if (rel.tuples != NULL)
+        free(rel.tuples);
 }
 
 void init_array(int* array,int size,int value){
     for(int i=0;i < size ;i++){
         array[i]=value;
     }
+}
+
+void print_result(result* res) {
+    for (int i=0; i<res->result_size; i++)
+        printf("(%d, %d) ", res->pairs[i].key1, res->pairs[i].key2);
+    printf("\n\n");
 }
 
 
