@@ -68,7 +68,7 @@ result joinfunction(relation r, relation s){
                 pair pair;
 
                 pair.key2 = partition_info2.ordered_rel.tuples[j].key;
-                pair.key1 = r.tuples[p[k]].key;
+                pair.key1 = p[k];
                 pair.payload = r.tuples[p[k]].payload;
                 add_result(&ret,pair);
             }

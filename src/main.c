@@ -4,10 +4,10 @@
 
 #include "relations.h"
 #include "parser.h"
-#include "intermediates.h"
 #include "filter.h"
 #include "utils.h"
 #include "join.h"
+#include "execqueries.h"
 
 #define MAX_LINE_SIZE 50
 #define MAX_N_TABLES 25
@@ -103,6 +103,8 @@ int main(int argc, char** argv) {
     intermediates = insert_intermediates_join(intermediates, &joinres3, indexes3);
     print_intermediates(intermediates);
 
+    printsum(1, 2, intermediates, tables);
+
     // cleanup
     delete_intermediates(intermediates);
     for (int i=0; i<n_tables; i++)
@@ -124,5 +126,6 @@ int main(int argc, char** argv) {
         query_info_delete(&(queries[i]));
     }
     free(queries);
+
     return 0;
 }
