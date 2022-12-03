@@ -10,31 +10,46 @@ Intermediates* init_intermediates(size_t relation_count) {
     return intermediates;
 }
 
-void delete_intermediates(Intermediates* intermediates) {
-    for (int i=0; i<intermediates->relation_count; i++)
-        delete_intermediate(intermediates->intermediates[i]);
-    free(intermediates->intermediates);
-    free(intermediates);
+void delete_intermediates(Intermediates** intermediates) {
+    for (int i=0; i<(*intermediates)->relation_count; i++)
+        delete_intermediate(&((*intermediates)->intermediates[i]));
+    free((*intermediates)->intermediates);
+    (*intermediates)->intermediates = NULL;
+    (*intermediates)->relation_count = 0;
+    free(*intermediates);
+    *intermediates = NULL;
 }
 
 Intermediate* init_intermediate(size_t relation_count) {
     Intermediate* intermediate;
     intermediate = malloc(sizeof(Intermediate));
     intermediate->relation_count = relation_count;
+    intermediate->rowids_count = 0;
     intermediate->rowids = malloc(relation_count * sizeof(int*));
+    for (int i=0; i<relation_count; i++)
+        intermediate->rowids[i] = NULL;
     return intermediate;
 }
 
-void delete_intermediate(Intermediate* intermediate) {
-    for (int i=0; i<intermediate->relation_count; i++)
-        if (intermediate->rowids[i] != NULL)
-            free(intermediate->rowids[i]);
-    free(intermediate->rowids);
-    free(intermediate);
+void delete_intermediate(Intermediate** intermediate) {
+    for (int i=0; i<(*intermediate)->relation_count; i++) {
+        if ((*intermediate)->rowids[i] != NULL) {
+            free((*intermediate)->rowids[i]);
+            (*intermediate)->rowids[i] = NULL;
+        }
+    }
+    free((*intermediate)->rowids);
+    (*intermediate)->rowids = NULL;
+    (*intermediate)->relation_count = 0;
+    (*intermediate)->rowids_count = 0;
+    free(*intermediate);
+    *intermediate = NULL;
 }
 
 void print_intermediates(Intermediates* intermediates) {
+    if (intermediates == NULL) return;
     printf("\n");
+
     for (int i=0; i<intermediates->relation_count; i++) {
         printf("=============== Intermediate %d: ===============\n", i);
         if (intermediates->intermediates[i]->rowids_count != 0) {

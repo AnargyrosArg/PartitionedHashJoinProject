@@ -33,21 +33,25 @@ void printsum(int rel, int column, Intermediates* inter, table *tabl){
 }
 
 void exec_query(QueryInfo *query, table* tabl){
-
+    FilterInfo* current_filter = query->filters;
+    JoinInfo* current_join = query->joins;
+    SelectionInfo* current_proj = query->projections;
 
     //we create the intermediate struct that we will use to store the results
     Intermediates *intermediates = init_intermediates(query->num_rels);
+    //print_intermediates(intermediates);
 
     //we first need to filter the relations
     //we pass all the filter list till the end
-    while(query->filters !=NULL){
-
-        int rel = query->filters->sel.rel_id;
-        int col = query->filters->sel.col_id;
-        int op = query->filters->type;
-        long long value = query->filters->constant;
+    //printf("filters:\n");
+    while(current_filter!=NULL){
+        int rel = current_filter->sel.rel_id;
+        int col = current_filter->sel.col_id;
+        int op = current_filter->type;
+        long long value = current_filter->constant;
         //we have to get the actual realtion from the table, remember that the int rel is the id of the relation in the query, not the actual id of the relation in the table
         int actualid = query->rel_ids[rel];
+        //printf("filter1: rel = %d, col = %d, op = %d, value = %lld, actualid = %d\n", rel, col, op, value, actualid);
         
         //now we create the relation that will be filtered
         //first we check if it exists in the intermediates
@@ -59,11 +63,15 @@ void exec_query(QueryInfo *query, table* tabl){
         relation filtered_relation;
         //if it doesn't exist we create it from the table
         if(rowidarray == NULL){
+            //printf("no rowids found\nPrefiltered relation:\n");
             tuple *tuples = malloc(tabl[actualid].num_tuples * sizeof(tuple));
+            //printf("size of tuples: %ld\n", tabl[actualid].num_tuples);
             for (int i=0;i<tabl[actualid].num_tuples;i++){
                 tuples[i].key = i;
                 tuples[i].payload = tabl[actualid].table[col][i];
+                //printf("(%d, %d) ", tuples[i].key, tuples[i].payload);
             }
+            //printf("\n");
             prefiltered_relation.tuples = tuples;
             prefiltered_relation.num_tuples = tabl[actualid].num_tuples;
 
@@ -72,10 +80,12 @@ void exec_query(QueryInfo *query, table* tabl){
             filter_function(&prefiltered_relation,&filtered_relation, op, value);
             //now we add the filtered relation to the intermediates
             intermediates = insert_intermediates_filter(intermediates,& filtered_relation, rel);
+            //print_intermediates(intermediates);
         }
 
         //if the relation already exists in the intermediates we get the ids from there
         else{
+            //printf("rowids found\n");
             //we create the relation from the rowidarray
             tuple *tuples = malloc(numrows * sizeof(tuple));
             for (int i=0;i<numrows;i++){
@@ -89,9 +99,10 @@ void exec_query(QueryInfo *query, table* tabl){
             filter_function(&prefiltered_relation,&filtered_relation, op, value);
             //now we add the filtered relation to the intermediates
             intermediates = insert_intermediates_filter(intermediates, &filtered_relation, rel);
+            //print_intermediates(intermediates);
         }
 
-        query->filters = query->filters->next;
+        current_filter = current_filter->next;
 
         //we free the memory of relations each time
         free(prefiltered_relation.tuples);
@@ -101,11 +112,12 @@ void exec_query(QueryInfo *query, table* tabl){
 
     //now we continue with the joins
     //we pass all the join list till the end
-    while(query->joins !=NULL){
-        int rel1 = query->joins->left.rel_id;
-        int rel2 = query->joins->right.rel_id;
-        int col1 = query->joins->left.col_id;
-        int col2 = query->joins->right.col_id;
+    //printf("joins:\n");
+    while(current_join !=NULL){
+        int rel1 = current_join->left.rel_id;
+        int rel2 = current_join->right.rel_id;
+        int col1 = current_join->left.col_id;
+        int col2 = current_join->right.col_id;
 
         //we have to get the actual realtion from the table, remember that the int rel is the id of the relation in the query, not the actual id of the relation in the table
         int actualid1 = query->rel_ids[rel1];
@@ -171,9 +183,10 @@ void exec_query(QueryInfo *query, table* tabl){
         uint indexes[] = {rel1, rel2};
         //we add the joined relation to the intermediates
         intermediates = insert_intermediates_join(intermediates, &joinres, indexes);
+        //print_intermediates(intermediates);
 
         //we coninue to the next join
-        query->joins = query->joins->next;
+        current_join = current_join->next;
 
         //we free the memory of relations each time
         free(prejoined_relation1.tuples);
@@ -182,20 +195,19 @@ void exec_query(QueryInfo *query, table* tabl){
 
     //now that we finished with the joins and the filter all we have to do is do the projections and print the sum
     //we pass all the projection list till the end
-    while(query->projections != NULL){
-        int projrel = query->projections->rel_id;
-        int projcol = query->projections->col_id;
+    while(current_proj != NULL){
+        int projrel = current_proj->rel_id;
+        int projcol = current_proj->col_id;
         //we get the actual relation from the table
         int actualid = query->rel_ids[projrel];
         //now we just run the sum function for every projection
         printsum(projrel, projcol, intermediates,&tabl[actualid]);
         //we move on to the next projection
-        query->projections = query->projections->next;
+        current_proj = current_proj->next;
     }
 
     printf("\n");
 
-
-    delete_intermediates(intermediates);
+    delete_intermediates(&intermediates);
     return;
 }
