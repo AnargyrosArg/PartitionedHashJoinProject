@@ -112,8 +112,9 @@ int main(int argc, char** argv) {
 
     //===================================================================================
     
-   exec_all_queries(queries, tables, n_queries);
+    exec_all_queries(queries, tables, n_queries);
 
+    
     //free tables mem
     for(int i =0;i<n_tables;i++){
         delete_table(&(tables[i]));
