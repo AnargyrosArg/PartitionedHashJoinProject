@@ -220,8 +220,7 @@ void exec_query(QueryInfo *query, table* tabl){
         free(prejoined_relation1.tuples);
         free(prejoined_relation2.tuples);
 
-        // I WANT THIS LINE UNCOMMENTED BCZ IT FIXES BIG MEM LEAK BUT IT ALSO CAUSE SEG FAULT PLS SOMEONE FIX IT :(
-        //delete_result(&joinres);
+        delete_result(&joinres);
     }
 
     //now that we finished with the joins and the filter all we have to do is do the projections and print the sum
