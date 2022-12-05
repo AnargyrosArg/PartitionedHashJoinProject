@@ -52,15 +52,22 @@ void print_intermediates(Intermediates* intermediates) {
 
     for (int i=0; i<intermediates->relation_count; i++) {
         printf("=============== Intermediate %d: ===============\n", i);
+
         if (intermediates->intermediates[i]->rowids_count != 0) {
-            for (int j=0; j<intermediates->intermediates[i]->relation_count; j++) {
-                if (intermediates->intermediates[i]->rowids[j] != NULL) {
-                    printf("rowids for relation with index %d:\n", j);
-                    for (int k=0; k<intermediates->intermediates[i]->rowids_count; k++)
-                        printf("%d ", intermediates->intermediates[i]->rowids[j][k]);
-                    printf("\n");
-                }
+            for (int j=0; j<intermediates->intermediates[i]->relation_count; j++)
+                if (intermediates->intermediates[i]->rowids[j] != NULL) 
+                    printf("%d          ", j);
+            printf("\n");
+            int loops = intermediates->intermediates[i]->rowids_count;
+            //if (loops > 1000) loops = 1000;
+            for (int j=0; j<loops; j++) {
+                printf("( ");
+                for (int k=0; k<intermediates->intermediates[i]->relation_count; k++)
+                    if (intermediates->intermediates[i]->rowids[k] != NULL) 
+                        printf("%d ", intermediates->intermediates[i]->rowids[k][j]);
+                printf(") ");
             }
+            printf("\n");
         }
     }
     printf("\n");
@@ -143,6 +150,8 @@ Intermediates* insert_intermediates_join(Intermediates* intermediates, result* r
                 intermediates->intermediates[i]->rowids[indexes[0]] = join_rowids[0];
                 intermediates->intermediates[i]->rowids[indexes[1]] = join_rowids[1];
                 intermediates->intermediates[i]->rowids_count = result->result_size;
+                free(join_rowids[0]);
+                free(join_rowids[1]);
                 return intermediates;
             }
         }
@@ -196,21 +205,27 @@ Intermediates* insert_intermediates_join(Intermediates* intermediates, result* r
             }
         }
         intermediates->intermediates[inter_indexes[stored_index]]->rowids_count = final_size;
-        free(join_rowids[0]);
-        free(join_rowids[1]);
     }
     // ============== CASE 3: both relations already have stored rowids (similar to case 2) ==============
     else {
         size_t final_size = 0, rel_count = 0; // rel_count starts at 0 because no all-new relations are being introduced
-        int counter = 0;
+        int counter = 0, same_intermediate = (inter_indexes[0] == inter_indexes[1]);
 
         // first pass to find final rowids size
         for (int i=0; i<result->result_size; i++) {
             for (int j=0; j<intermediates->intermediates[inter_indexes[0]]->rowids_count; j++) {
                 if (intermediates->intermediates[inter_indexes[0]]->rowids[indexes[0]][j] == join_rowids[0][i]) {
-                    for (int k=0; k<intermediates->intermediates[inter_indexes[1]]->rowids_count; k++) {
-                        if (intermediates->intermediates[inter_indexes[1]]->rowids[indexes[1]][k] == join_rowids[1][i])
+                    // both stored relations are in the same intermediate
+                    if (same_intermediate) {
+                        if (intermediates->intermediates[inter_indexes[0]]->rowids[indexes[1]][j] == join_rowids[1][i])
                             final_size++;
+                        continue;
+                    }
+                    // stored relations in different intermediates
+                    for (int k=0; k<intermediates->intermediates[inter_indexes[1]]->rowids_count; k++) {
+                        if (intermediates->intermediates[inter_indexes[1]]->rowids[indexes[1]][k] == join_rowids[1][i]) {
+                            final_size++;
+                        }
                     }
                 }
             }
@@ -222,6 +237,9 @@ Intermediates* insert_intermediates_join(Intermediates* intermediates, result* r
             rel_count += (intermediates->intermediates[inter_indexes[1]]->rowids[i] != NULL);
         }
 
+        // correction in case both stored relations are in the same intermediate
+        if (same_intermediate) rel_count = rel_count/2;
+
         // initialize final rowids arrays
         int** final_rowids = malloc(rel_count * sizeof(int*));
         for (int i=0; i<rel_count; i++)
@@ -231,6 +249,22 @@ Intermediates* insert_intermediates_join(Intermediates* intermediates, result* r
         for (int i=0; i<result->result_size; i++) {
             for (int j=0; j<intermediates->intermediates[inter_indexes[0]]->rowids_count; j++) {
                 if (intermediates->intermediates[inter_indexes[0]]->rowids[indexes[0]][j] == join_rowids[0][i]) {
+                    // both stored relations are in the same intermediate
+                    if (same_intermediate) {
+                        if (intermediates->intermediates[inter_indexes[0]]->rowids[indexes[1]][j] == join_rowids[1][i]) {
+                            for (int l=0; l<intermediates->relation_count; l++) {
+                                if ((intermediates->intermediates[inter_indexes[0]]->rowids[l] != NULL) && (l != indexes[0]) && (l != indexes[1]))
+                                    final_rowids[l][counter] = intermediates->intermediates[inter_indexes[0]]->rowids[l][j];
+                                if (l == indexes[0])
+                                    final_rowids[l][counter] = join_rowids[0][i];
+                                if (l == indexes[1])
+                                    final_rowids[l][counter] = join_rowids[1][i];
+                            }
+                            counter++;
+                        }
+                        continue;
+                    }
+                    // stored relations in different intermediates
                     for (int k=0; k<intermediates->intermediates[inter_indexes[1]]->rowids_count; k++) {
                         if (intermediates->intermediates[inter_indexes[1]]->rowids[indexes[1]][k] == join_rowids[1][i]) {
                             for (int l=0; l<intermediates->relation_count; l++) {
@@ -260,16 +294,16 @@ Intermediates* insert_intermediates_join(Intermediates* intermediates, result* r
             }
 
             // free anything from the second intermediate
-            if (intermediates->intermediates[inter_indexes[1]]->rowids[i] != NULL) {
+            if (!same_intermediate && intermediates->intermediates[inter_indexes[1]]->rowids[i] != NULL) {
                 free(intermediates->intermediates[inter_indexes[1]]->rowids[i]);
                 intermediates->intermediates[inter_indexes[1]]->rowids[i] = NULL;
             }
         }
         intermediates->intermediates[inter_indexes[0]]->rowids_count = final_size;
-        intermediates->intermediates[inter_indexes[1]]->rowids_count = 0;
-        free(join_rowids[0]);
-        free(join_rowids[1]);
+        if (!same_intermediate) intermediates->intermediates[inter_indexes[1]]->rowids_count = 0;
     }
+    free(join_rowids[0]);
+    free(join_rowids[1]);
     return intermediates;
 }
 

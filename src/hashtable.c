@@ -105,6 +105,7 @@ int* search_hashtable(hashtable* table, int key, int* ret_size) {
         }
     }
     //printf("could not find any data from key %d\n", key);
+    *ret_size = 0;
     return NULL;
 }
 

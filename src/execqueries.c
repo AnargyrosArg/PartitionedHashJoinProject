@@ -37,13 +37,16 @@ void exec_query(QueryInfo *query, table* tabl){
     JoinInfo* current_join = query->joins;
     SelectionInfo* current_proj = query->projections;
 
+    // debug tools
+    int print_filter = 0;
+    int print_join_index = -1;
+    int join_counter = 0;
+
     //we create the intermediate struct that we will use to store the results
     Intermediates *intermediates = init_intermediates(query->num_rels);
-    //print_intermediates(intermediates);
 
     //we first need to filter the relations
     //we pass all the filter list till the end
-    //printf("filters:\n");
     while(current_filter!=NULL){
         int rel = current_filter->sel.rel_id;
         int col = current_filter->sel.col_id;
@@ -51,7 +54,6 @@ void exec_query(QueryInfo *query, table* tabl){
         long long value = current_filter->constant;
         //we have to get the actual realtion from the table, remember that the int rel is the id of the relation in the query, not the actual id of the relation in the table
         int actualid = query->rel_ids[rel];
-        //printf("filter1: rel = %d, col = %d, op = %d, value = %lld, actualid = %d\n", rel, col, op, value, actualid);
         
         //now we create the relation that will be filtered
         //first we check if it exists in the intermediates
@@ -63,15 +65,11 @@ void exec_query(QueryInfo *query, table* tabl){
         relation filtered_relation;
         //if it doesn't exist we create it from the table
         if(rowidarray == NULL){
-            //printf("no rowids found\nPrefiltered relation:\n");
             tuple *tuples = malloc(tabl[actualid].num_tuples * sizeof(tuple));
-            //printf("size of tuples: %ld\n", tabl[actualid].num_tuples);
             for (int i=0;i<tabl[actualid].num_tuples;i++){
                 tuples[i].key = i;
                 tuples[i].payload = tabl[actualid].table[col][i];
-                //printf("(%d, %d) ", tuples[i].key, tuples[i].payload);
             }
-            //printf("\n");
             prefiltered_relation.tuples = tuples;
             prefiltered_relation.num_tuples = tabl[actualid].num_tuples;
 
@@ -80,12 +78,11 @@ void exec_query(QueryInfo *query, table* tabl){
             filter_function(&prefiltered_relation,&filtered_relation, op, value);
             //now we add the filtered relation to the intermediates
             intermediates = insert_intermediates_filter(intermediates,& filtered_relation, rel);
-            //print_intermediates(intermediates);
+            if (print_filter) print_intermediates(intermediates);
         }
 
         //if the relation already exists in the intermediates we get the ids from there
         else{
-            //printf("rowids found\n");
             //we create the relation from the rowidarray
             tuple *tuples = malloc(numrows * sizeof(tuple));
             for (int i=0;i<numrows;i++){
@@ -99,7 +96,7 @@ void exec_query(QueryInfo *query, table* tabl){
             filter_function(&prefiltered_relation,&filtered_relation, op, value);
             //now we add the filtered relation to the intermediates
             intermediates = insert_intermediates_filter(intermediates, &filtered_relation, rel);
-            //print_intermediates(intermediates);
+            if (print_filter) print_intermediates(intermediates);
         }
 
         current_filter = current_filter->next;
@@ -112,7 +109,6 @@ void exec_query(QueryInfo *query, table* tabl){
 
     //now we continue with the joins
     //we pass all the join list till the end
-    //printf("joins:\n");
     while(current_join !=NULL){
         int rel1 = current_join->left.rel_id;
         int rel2 = current_join->right.rel_id;
@@ -148,14 +144,29 @@ void exec_query(QueryInfo *query, table* tabl){
             prejoined_relation1.tuples = tuples1;
             prejoined_relation1.num_tuples = tabl[actualid1].num_tuples;
         }
-        else{
+        else { // if rowids already exist in intermediate results, use them to create relation
             tuple *tuples1 = malloc(numrows1 * sizeof(tuple));
-            for (i=0;i<numrows1;i++){
-                tuples1[i].key = rowidarray1[i];
-                tuples1[i].payload = tabl[actualid1].table[col1][rowidarray1[i]];
+            int* ret;
+            int counter = 0, found = 0, ret_size;
+            hashtable* htable = init_hashtable(numrows1, 16); // WE DONT WANT DUPLICATE ROWIDS ON RELATION WE WILL CREATE
+                                                              // so we use a hashtable to store all the rowids we have already used
+            for (i=0; i<numrows1; i++) {
+                ret = search_hashtable(htable, tabl[actualid1].table[col1][rowidarray1[i]], &ret_size); // check if this rowid has already been used
+                for (int j=0; j<ret_size; j++)
+                    if (ret[j] == rowidarray1[i])
+                        found = 1;
+
+                if (!found) { // if we have not put this rowid in the relation yet, put it in and also insert it to the hashtable to avoid it in the future
+                    tuples1[counter].key = rowidarray1[i];
+                    tuples1[counter].payload = tabl[actualid1].table[col1][rowidarray1[i]];
+                    htable = insert_hashtable(htable, tuples1[counter].payload, tuples1[counter].key);
+                    counter++;
+                }
+                found = 0;
             }
             prejoined_relation1.tuples = tuples1;
-            prejoined_relation1.num_tuples = numrows1;
+            prejoined_relation1.num_tuples = counter;
+            delete_hashtable(htable);
         }
 
         //now for the second relation
@@ -168,14 +179,29 @@ void exec_query(QueryInfo *query, table* tabl){
             prejoined_relation2.tuples = tuples2;
             prejoined_relation2.num_tuples = tabl[actualid2].num_tuples;
         }
-        else{
+        else { // if rowids already exist in intermediate results, use them to create relation
             tuple *tuples2 = malloc(numrows2 * sizeof(tuple));
-            for (i=0;i<numrows2;i++){
-                tuples2[i].key = rowidarray2[i];
-                tuples2[i].payload = tabl[actualid2].table[col2][rowidarray2[i]];
+            int* ret;
+            int counter = 0, found = 0, ret_size;
+            hashtable* htable = init_hashtable(numrows2, 16); // WE DONT WANT DUPLICATE ROWIDS ON RELATION WE WILL CREATE
+                                                              // so we use a hashtable to store all the rowids we have already used
+            for (i=0; i<numrows2; i++){
+                ret = search_hashtable(htable, tabl[actualid2].table[col2][rowidarray2[i]], &ret_size); // check if this rowid has already been used
+                for (int j=0; j<ret_size; j++)
+                    if (ret[j] == rowidarray2[i])
+                        found = 1;
+
+                if (!found) { // if we have not put this rowid in the relation yet, put it in and also insert it to the hashtable to avoid it in the future
+                    tuples2[counter].key = rowidarray2[i];
+                    tuples2[counter].payload = tabl[actualid2].table[col2][rowidarray2[i]];
+                    htable = insert_hashtable(htable, tuples2[counter].payload, tuples2[counter].key);
+                    counter++;
+                }
+                found = 0;
             }
             prejoined_relation2.tuples = tuples2;
-            prejoined_relation2.num_tuples = numrows2;
+            prejoined_relation2.num_tuples = counter;
+            delete_hashtable(htable);
         }
 
         //now we join the relations
@@ -183,14 +209,19 @@ void exec_query(QueryInfo *query, table* tabl){
         uint indexes[] = {rel1, rel2};
         //we add the joined relation to the intermediates
         intermediates = insert_intermediates_join(intermediates, &joinres, indexes);
-        //print_intermediates(intermediates);
+        if (print_join_index != -1 && join_counter == print_join_index)
+            print_intermediates(intermediates);
 
         //we coninue to the next join
         current_join = current_join->next;
+        join_counter++;
 
         //we free the memory of relations each time
         free(prejoined_relation1.tuples);
         free(prejoined_relation2.tuples);
+
+        // I WANT THIS LINE UNCOMMENTED BCZ IT FIXES BIG MEM LEAK BUT IT ALSO CAUSE SEG FAULT PLS SOMEONE FIX IT :(
+        //delete_result(&joinres);
     }
 
     //now that we finished with the joins and the filter all we have to do is do the projections and print the sum
