@@ -144,19 +144,19 @@ void exec_query(QueryInfo *query, table* tabl){
             prejoined_relation1.tuples = tuples1;
             prejoined_relation1.num_tuples = tabl[actualid1].num_tuples;
         }
-        else {
+        else { // if rowids already exist in intermediate results, use them to create relation
             tuple *tuples1 = malloc(numrows1 * sizeof(tuple));
             int* ret;
             int counter = 0, found = 0, ret_size;
-            hashtable* htable = init_hashtable(numrows1, 16);
-
+            hashtable* htable = init_hashtable(numrows1, 16); // WE DONT WANT DUPLICATE ROWIDS ON RELATION WE WILL CREATE
+                                                              // so we use a hashtable to store all the rowids we have already used
             for (i=0; i<numrows1; i++) {
-                ret = search_hashtable(htable, tabl[actualid1].table[col1][rowidarray1[i]], &ret_size);
+                ret = search_hashtable(htable, tabl[actualid1].table[col1][rowidarray1[i]], &ret_size); // check if this rowid has already been used
                 for (int j=0; j<ret_size; j++)
                     if (ret[j] == rowidarray1[i])
                         found = 1;
 
-                if (!found) {
+                if (!found) { // if we have not put this rowid in the relation yet, put it in and also insert it to the hashtable to avoid it in the future
                     tuples1[counter].key = rowidarray1[i];
                     tuples1[counter].payload = tabl[actualid1].table[col1][rowidarray1[i]];
                     htable = insert_hashtable(htable, tuples1[counter].payload, tuples1[counter].key);
@@ -179,19 +179,19 @@ void exec_query(QueryInfo *query, table* tabl){
             prejoined_relation2.tuples = tuples2;
             prejoined_relation2.num_tuples = tabl[actualid2].num_tuples;
         }
-        else {
+        else { // if rowids already exist in intermediate results, use them to create relation
             tuple *tuples2 = malloc(numrows2 * sizeof(tuple));
             int* ret;
             int counter = 0, found = 0, ret_size;
-            hashtable* htable = init_hashtable(numrows2, 16);
-
+            hashtable* htable = init_hashtable(numrows2, 16); // WE DONT WANT DUPLICATE ROWIDS ON RELATION WE WILL CREATE
+                                                              // so we use a hashtable to store all the rowids we have already used
             for (i=0; i<numrows2; i++){
-                ret = search_hashtable(htable, tabl[actualid2].table[col2][rowidarray2[i]], &ret_size);
+                ret = search_hashtable(htable, tabl[actualid2].table[col2][rowidarray2[i]], &ret_size); // check if this rowid has already been used
                 for (int j=0; j<ret_size; j++)
                     if (ret[j] == rowidarray2[i])
                         found = 1;
 
-                if (!found) {
+                if (!found) { // if we have not put this rowid in the relation yet, put it in and also insert it to the hashtable to avoid it in the future
                     tuples2[counter].key = rowidarray2[i];
                     tuples2[counter].payload = tabl[actualid2].table[col2][rowidarray2[i]];
                     htable = insert_hashtable(htable, tuples2[counter].payload, tuples2[counter].key);
@@ -219,7 +219,9 @@ void exec_query(QueryInfo *query, table* tabl){
         //we free the memory of relations each time
         free(prejoined_relation1.tuples);
         free(prejoined_relation2.tuples);
-        delete_result(&joinres);
+
+        // I WANT THIS LINE UNCOMMENTED BCZ IT FIXES BIG MEM LEAK BUT IT ALSO CAUSE SEG FAULT PLS SOMEONE FIX IT :(
+        //delete_result(&joinres);
     }
 
     //now that we finished with the joins and the filter all we have to do is do the projections and print the sum
