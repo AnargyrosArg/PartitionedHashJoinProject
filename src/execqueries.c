@@ -219,6 +219,7 @@ void exec_query(QueryInfo *query, table* tabl){
         //we free the memory of relations each time
         free(prejoined_relation1.tuples);
         free(prejoined_relation2.tuples);
+        delete_result(&joinres);
     }
 
     //now that we finished with the joins and the filter all we have to do is do the projections and print the sum

@@ -150,6 +150,8 @@ Intermediates* insert_intermediates_join(Intermediates* intermediates, result* r
                 intermediates->intermediates[i]->rowids[indexes[0]] = join_rowids[0];
                 intermediates->intermediates[i]->rowids[indexes[1]] = join_rowids[1];
                 intermediates->intermediates[i]->rowids_count = result->result_size;
+                free(join_rowids[0]);
+                free(join_rowids[1]);
                 return intermediates;
             }
         }
@@ -203,8 +205,6 @@ Intermediates* insert_intermediates_join(Intermediates* intermediates, result* r
             }
         }
         intermediates->intermediates[inter_indexes[stored_index]]->rowids_count = final_size;
-        free(join_rowids[0]);
-        free(join_rowids[1]);
     }
     // ============== CASE 3: both relations already have stored rowids (similar to case 2) ==============
     else {
@@ -301,9 +301,9 @@ Intermediates* insert_intermediates_join(Intermediates* intermediates, result* r
         }
         intermediates->intermediates[inter_indexes[0]]->rowids_count = final_size;
         if (!same_intermediate) intermediates->intermediates[inter_indexes[1]]->rowids_count = 0;
-        free(join_rowids[0]);
-        free(join_rowids[1]);
     }
+    free(join_rowids[0]);
+    free(join_rowids[1]);
     return intermediates;
 }
 
