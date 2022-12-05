@@ -75,7 +75,7 @@ void exec_query(QueryInfo *query, table* tabl){
 
 
             //now we filter the relation
-            filter_function(&prefiltered_relation,&filtered_relation, op, value);
+            better_filter_function(&prefiltered_relation,&filtered_relation, op, value);
             //now we add the filtered relation to the intermediates
             intermediates = insert_intermediates_filter(intermediates,& filtered_relation, rel);
             if (print_filter) print_intermediates(intermediates);
@@ -93,7 +93,7 @@ void exec_query(QueryInfo *query, table* tabl){
             prefiltered_relation.num_tuples = numrows;
 
             //now we filter the relation
-            filter_function(&prefiltered_relation,&filtered_relation, op, value);
+            better_filter_function(&prefiltered_relation,&filtered_relation, op, value);
             //now we add the filtered relation to the intermediates
             intermediates = insert_intermediates_filter(intermediates, &filtered_relation, rel);
             if (print_filter) print_intermediates(intermediates);

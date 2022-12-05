@@ -7,9 +7,10 @@ enum operation { _EQUALS , _GREATER , _LESS, _GREATER_EQUALS, _LESS_EQUALS };
 
 //we make a basic  list that holds ints
 typedef struct list {
-    size_t row_id;
-    size_t payload;
+    int row_id;
+    int payload;
     struct list *next;
+    struct list *tail;
 } list;
 
 //basic list functions

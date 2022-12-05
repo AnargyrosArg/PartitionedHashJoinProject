@@ -48,48 +48,74 @@ void filter_function(relation* r, relation* ret, int operation, int target) {
 }
 
 
-//TODO: it does not return the correct result if i run it with the exeute query function
-//better filter it uses list so we dont have to do 2 passes to the main table
-// void better_filter_function(relation* r, relation* ret, int operation, int target) {
-//     size_t counter = 0;
+//better filter it uses list so we dont have to do 2 passes to the main table, i suppose it is faster than the first one
+void better_filter_function(relation* r, relation* ret, int operation, int target) {
+    size_t counter = 0;
 
-//     // input check
-//     if (operation < _EQUALS && operation > _LESS_EQUALS) {
-//         fprintf(stderr, "filter_function: Invalid operation.\n");
-//         return;
-//     }
+    // input check
+    if (operation < _EQUALS && operation > _LESS_EQUALS) {
+        fprintf(stderr, "filter_function: Invalid operation.\n");
+        return;
+    }
 
-//     //we initialize the list
-//     list *l = init_list();
+    //we initialize the list
+    list *l = init_list();
 
-//     for (int i=0; i<r->num_tuples; i++) {
-//         int payload_tmp = r->tuples[i].payload;
-//         switch(operation) {
-//             case _EQUALS:            counter += (payload_tmp == target);   list_append(l,i,payload_tmp);    break;
-//             case _GREATER:           counter += (payload_tmp > target);    list_append(l,i,payload_tmp);   break;
-//             case _LESS:              counter += (payload_tmp < target);    list_append(l,i,payload_tmp);   break;
-//             case _GREATER_EQUALS:    counter += (payload_tmp >= target);   list_append(l,i,payload_tmp);   break;
-//             case _LESS_EQUALS:       counter += (payload_tmp <= target);   list_append(l,i,payload_tmp);   break;
-//         }
-//     }
+    for (int i=0; i<r->num_tuples; i++) {
+        int payload_tmp = r->tuples[i].payload;
+        int key_tmp = r->tuples[i].key;
+        switch(operation) {
+            case _EQUALS:        
+                if(payload_tmp == target){
+                    list_append(l, key_tmp, payload_tmp);
+                    counter++;
+                }      
+            break;
+            case _GREATER:
+                if(payload_tmp > target){
+                    list_append(l, key_tmp, payload_tmp);
+                    counter++;
+                }      
+            break;
+            case _LESS:  
+                if(payload_tmp < target){
+                    list_append(l, key_tmp, payload_tmp);
+                    counter++;
+                }      
+                break;
+            case _GREATER_EQUALS:
+                if(payload_tmp >= target){
+                    list_append(l, key_tmp, payload_tmp);
+                    counter++;
+                }      
+                break;
+            case _LESS_EQUALS:
+                if(payload_tmp <= target){
+                    list_append(l, key_tmp, payload_tmp);
+                    counter++;
+                }      
+                break;
+        }
+    }
 
-//     // allocate memory for tuples
-//     ret->num_tuples = counter;
-//     tuple* tuples = malloc(counter * sizeof(tuple));
 
-//     list *curr=l;
-//     for(size_t j=0;j<counter;j++){
-//         if(curr->row_id ==-1){
-//             printf("error");
-//         }
-//         tuples[j].key = curr->row_id;
-//         tuples[j].payload = curr->payload;
-//         curr=curr->next;
-//     }
-//     ret->tuples = tuples;
-//     delete_list(l);
-//     return;
-// }
+    // allocate memory for tuples
+    ret->num_tuples = counter;
+    tuple* tuples = malloc(counter * sizeof(tuple));
+
+    list *curr=l;
+    for(size_t j=0;j<counter;j++){
+        if(curr->row_id ==-1){
+            printf("error");
+        }
+        tuples[j].key = curr->row_id;
+        tuples[j].payload = curr->payload;
+        curr=curr->next;
+    }
+    ret->tuples = tuples;
+    delete_list(l);
+    return;
+}
 
 
 
@@ -99,6 +125,7 @@ list *init_list(){
     l->row_id = -1;
     l->payload = -1;
     l->next = NULL;
+    l->tail = l;
     return l;
 }
 
@@ -108,15 +135,23 @@ void list_append(list *l, size_t value,size_t pd){
         l->row_id = value;
         l->payload = pd;
     }
+    else if(l->next == NULL){
+        list *current= (list*)malloc(sizeof(list));
+        current->row_id = value;
+        current->payload = pd;
+        current->next = NULL;
+        l->next = current;
+        l->tail = current;
+        current->tail = current;
+    }
     else{
-        list *current = l;
-        while(current->next != NULL && current->row_id != -1){
-            current = current->next;
-        }
-        current->next = (list*)malloc(sizeof(list));
-        current->next->row_id = value;
-        current->next->payload = pd;
-        current->next->next = NULL;
+        list *current= (list*)malloc(sizeof(list));
+        current->row_id = value;
+        current->payload = pd;
+        current->next = NULL;
+        l->tail->next = current;
+        l->tail = current;
+        current->tail = current;
     }
 }
 
@@ -133,8 +168,8 @@ void delete_list(list *l){
 void print_list(list *l){
     list *current = l;
     while(current != NULL && current->row_id != -1){
-        printf("%ld ", current->row_id);
-        printf("%ld ", current->payload);
+        printf("%d ", current->row_id);
+        printf("%d ", current->payload);
         current = current->next;
     }
     printf("\n");
