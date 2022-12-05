@@ -13,9 +13,11 @@ void filter_test(void){
     relation ret;
     filter_function(&r,&ret,_GREATER,0);
     int result = ret.num_tuples;
-
-
     TEST_ASSERT(result == 5);
+    relation ret2;
+    better_filter_function(&r,&ret2,_LESS,1);
+    int result2 = ret2.num_tuples;
+    TEST_ASSERT(result2 == 5);
 }
 
 TEST_LIST = {
