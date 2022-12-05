@@ -150,8 +150,6 @@ Intermediates* insert_intermediates_join(Intermediates* intermediates, result* r
                 intermediates->intermediates[i]->rowids[indexes[0]] = join_rowids[0];
                 intermediates->intermediates[i]->rowids[indexes[1]] = join_rowids[1];
                 intermediates->intermediates[i]->rowids_count = result->result_size;
-                free(join_rowids[0]);
-                free(join_rowids[1]);
                 return intermediates;
             }
         }
