@@ -10,3 +10,4 @@ tests/parser_tests
 harness
 gmon.out
 profile
+tests/filter_tests
