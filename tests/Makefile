@@ -19,6 +19,9 @@ run_tests: $(TESTS)
 %: %.c
 	gcc $(GCC_FLAGS) $@.c $(BUILD_DIR)/$(@:_tests=.o) -o $@
 
+filter_tests: filter_tests.c
+	gcc $(GCC_FLAGS) filter_tests.c $(BUILD_DIR)/filter.o $(BUILD_DIR)/utils.o -o filter_tests
+
 partition_tests: partition_tests.c
 	gcc $(GCC_FLAGS) $@.c $(BUILD_DIR)/$(@:_tests=.o) $(BUILD_DIR)/utils.o $(BUILD_DIR)/hash1.o   -o $@
 
