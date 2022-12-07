@@ -1,7 +1,7 @@
 BUILD_DIR = ./build
 TEST_DIR = ./tests
 SRC_DIR = ./src
-GCC_FLAGS = -I./include/ -Wall -g -pg -O2
+GCC_FLAGS = -I./include/ -Wall -O2
 SOURCE_FILES = main.c hash1.c partition.c utils.c hashtable.c join.c relations.c parser.c intermediates.c filter.c execqueries.c
 HARNESS_SRC = harness.cpp
 OBJ_FILES = $(addprefix $(BUILD_DIR)/,$(SOURCE_FILES:.c=.o))

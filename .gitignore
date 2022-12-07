@@ -8,3 +8,5 @@ tests/join_tests
 tests/hashtable_tests
 tests/parser_tests
 harness
+gmon.out
+profile
