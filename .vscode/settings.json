@@ -25,7 +25,8 @@
         "hashtable.h": "c",
         "hash1.h": "c",
         "acutest.h": "c",
-        "join.h": "c"
+        "join.h": "c",
+        "intermediates.h": "c"
     },
     "makefile.launchConfigurations": [
         {
@@ -33,5 +34,6 @@
             "binaryPath": "/home/anarg/workspace/project/out",
             "binaryArgs": []
         }
-    ]
+    ],
+    "C_Cpp.errorSquiggles": "disabled"
 }

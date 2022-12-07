@@ -3,14 +3,12 @@
 #include <string.h>
 
 #include "relations.h"
-#include "parser.h"
+#include "utils.h"
+#include "execqueries.h"
 
-#define MAX_LINE_SIZE 50
+#define MAX_LINE_SIZE 100
 #define MAX_N_TABLES 25
 #define MAX_N_QUERIES 50
-
-
-
 
 int main(int argc, char** argv) {
     //consider making these global for easy access
@@ -30,30 +28,34 @@ int main(int argc, char** argv) {
     size_t line_max_size = MAX_LINE_SIZE;
     int n_read;
 
-
     //parse relation names and load them into memory
     while((n_read=getline(&line,&line_max_size,stdin))>0){
-        //remove newline
-        line[strlen(line)-1] = 0;
+        //remove newline and carriage return for the last 2 chars
+        for (int i=0; i<2; i++)
+            if ((line[strlen(line)-1] == 10) || (line[strlen(line)-1] == 13))
+                line[strlen(line)-1] = 0;
         if (strcmp(line,"Done")==0) break;
         //store table
         tables[n_tables++]=load_relation(line);
     }
 
+    int current = 0;
     //parse batch of queries
     while ((n_read=getline(&line,&line_max_size,stdin))>0) {
-        //remove newline
-        line[strlen(line)-1] = 0;
-        if (strcmp(line,"F")==0) continue;; // End of a batch
+        //remove newline and carriage return for the last 2 chars
+        for (int i=0; i<2; i++)
+            if ((line[strlen(line)-1] == 10) || (line[strlen(line)-1] == 13))
+                line[strlen(line)-1] = 0;
+        if (strcmp(line,"F")==0) continue; // End of a batch
         parse_query(line,&(queries[n_queries++]));
+        exec_query(&queries[current++],tables);
     }
-
-    for(int i =0;i<n_queries;i++){
-        print_query_info(queries[i]);
-    }
- 
-    //free input buffer
     free(line);
+
+
+    //harness waits for result before sending next batch , so we have to execute queries as they come    
+    //exec_all_queries(queries, tables, n_queries);
+    
     //free tables mem
     for(int i =0;i<n_tables;i++){
         delete_table(&(tables[i]));
@@ -65,5 +67,6 @@ int main(int argc, char** argv) {
         query_info_delete(&(queries[i]));
     }
     free(queries);
+
     return 0;
 }
