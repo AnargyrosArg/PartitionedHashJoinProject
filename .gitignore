@@ -7,3 +7,4 @@ partition_old.c
 tests/join_tests
 tests/hashtable_tests
 tests/parser_tests
+harness

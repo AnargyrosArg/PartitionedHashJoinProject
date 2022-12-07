@@ -1,16 +1,20 @@
 BUILD_DIR = ./build
 TEST_DIR = ./tests
 SRC_DIR = ./src
-GCC_FLAGS = -I./include/ -Wall -O3
+GCC_FLAGS = -I./include/ -Wall -g -pg -O2
 SOURCE_FILES = main.c hash1.c partition.c utils.c hashtable.c join.c relations.c parser.c intermediates.c filter.c execqueries.c
+HARNESS_SRC = harness.cpp
 OBJ_FILES = $(addprefix $(BUILD_DIR)/,$(SOURCE_FILES:.c=.o))
 
 
 .PHONY: clean clean_tests
 
 #Default rule, makes executable
-out: $(BUILD_DIR) $(OBJ_FILES)
+out: $(BUILD_DIR) $(OBJ_FILES) harness
 	gcc $(GCC_FLAGS) $(BUILD_DIR)/*.o -o out
+
+harness: $(SRC_DIR)/$(HARNESS_SRC)
+	g++ $(SRC_DIR)/$(HARNESS_SRC) -o $@
 
 #Compiles each source file into its object file individually 
 $(BUILD_DIR)/%.o : $(SRC_DIR)/%.c
@@ -29,7 +33,7 @@ $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
 clean: clean_tests
-	rm -rf $(BUILD_DIR)/* ./out
+	rm -rf $(BUILD_DIR)/* ./out ./harness
 
 clean_tests:
 	@cd $(TEST_DIR) && make clean

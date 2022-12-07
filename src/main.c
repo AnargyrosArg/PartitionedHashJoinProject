@@ -6,7 +6,7 @@
 #include "utils.h"
 #include "execqueries.h"
 
-#define MAX_LINE_SIZE 50
+#define MAX_LINE_SIZE 100
 #define MAX_N_TABLES 25
 #define MAX_N_QUERIES 50
 
@@ -39,6 +39,7 @@ int main(int argc, char** argv) {
         tables[n_tables++]=load_relation(line);
     }
 
+    int current = 0;
     //parse batch of queries
     while ((n_read=getline(&line,&line_max_size,stdin))>0) {
         //remove newline and carriage return for the last 2 chars
@@ -47,15 +48,13 @@ int main(int argc, char** argv) {
                 line[strlen(line)-1] = 0;
         if (strcmp(line,"F")==0) continue; // End of a batch
         parse_query(line,&(queries[n_queries++]));
+        exec_query(&queries[current++],tables);
     }
-
-    // for(int i =0;i<n_queries;i++){
-    //     print_query_info(queries[i]);
-    //     printf("\n");
-    // }
     free(line);
 
-    exec_all_queries(queries, tables, n_queries);
+
+    //harness waits for result before sending next batch , so we have to execute queries as they come    
+    //exec_all_queries(queries, tables, n_queries);
     
     //free tables mem
     for(int i =0;i<n_tables;i++){

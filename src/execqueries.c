@@ -23,10 +23,13 @@ void printsum(int rel, int column, Intermediates* inter, table *tabl){
 
     //if the sum is equal to 0 then we print NULL
     if(sum == 0){
-        printf("NULL ");
+        printf("NULL");
+      //  fprintf(stderr, "NULL");
+
     }
     else{
-        printf("%lu ",sum);
+        printf("%lu",sum);
+     //   fprintf(stderr, "%lu",sum);
     }
 
     return;
@@ -36,7 +39,6 @@ void exec_query(QueryInfo *query, table* tabl){
     FilterInfo* current_filter = query->filters;
     JoinInfo* current_join = query->joins;
     SelectionInfo* current_proj = query->projections;
-
     // debug tools
     int print_filter = 0;
     int print_join_index = -1;
@@ -232,11 +234,16 @@ void exec_query(QueryInfo *query, table* tabl){
         int actualid = query->rel_ids[projrel];
         //now we just run the sum function for every projection
         printsum(projrel, projcol, intermediates,&tabl[actualid]);
+        if(current_proj->next!=NULL){
+            printf(" ");
+          //  fprintf(stderr," ");
+        }
         //we move on to the next projection
         current_proj = current_proj->next;
     }
-
     printf("\n");
+    fflush(stdout);
+   // fprintf(stderr,"\n");
 
     delete_intermediates(&intermediates);
     return;

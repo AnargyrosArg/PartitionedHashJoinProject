@@ -162,6 +162,7 @@ Intermediates* insert_intermediates_join(Intermediates* intermediates, result* r
         size_t final_size = 0, rel_count = 1; // rel_count starts at 1 to account for the new relation being introduced by join
 
         // first pass to find final rowids size
+       // fprintf(stderr,"resultsize * rowidcount = %ld\n",result->result_size * intermediates->intermediates[inter_indexes[stored_index]]->rowids_count);
         for (int i=0; i<result->result_size; i++) {
             for (int j=0; j<intermediates->intermediates[inter_indexes[stored_index]]->rowids_count; j++) {
                 if (intermediates->intermediates[inter_indexes[stored_index]]->rowids[indexes[stored_index]][j] == join_rowids[stored_index][i])
