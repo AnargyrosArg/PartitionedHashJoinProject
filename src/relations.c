@@ -11,18 +11,13 @@ void delete_result(result* res){
     free(res->pairs);
 }
 
+
 void add_result(result* res,pair p){
     //if we reached max capacity , reallocate new,larger space and copy old values over
     if(res->capacity == res->result_size){
-        pair* new = malloc( (res->capacity + 100) * sizeof(pair));
-        for(int i=0;i<res->result_size;i++){
-            new[i].key1 = res->pairs[i].key1;
-            new[i].key2 = res->pairs[i].key2;
-            new[i].payload = res->pairs[i].payload;
-        }
-        free(res->pairs);
-        res->pairs = new;
-        res->capacity += 100;
+       // fprintf(stderr,"before %d now %d\n",res->capacity,res->capacity+RESULT_CAPACITY_INCREMENT);
+        res->pairs = realloc(res->pairs,(res->capacity + RESULT_CAPACITY_INCREMENT) * sizeof(pair));    
+        res->capacity += RESULT_CAPACITY_INCREMENT;
     }
     //add new pair
     res->pairs[res->result_size].key1 = p.key1;
@@ -33,6 +28,33 @@ void add_result(result* res,pair p){
     
     return;
 }
+
+
+
+
+
+// void add_result(result* res,pair p){
+//     //if we reached max capacity , reallocate new,larger space and copy old values over
+//     if(res->capacity == res->result_size){
+//         pair* new = malloc( (res->capacity + RESULT_CAPACITY_INCREMENT) * sizeof(pair));
+//         for(int i=0;i<res->result_size;i++){
+//             new[i].key1 = res->pairs[i].key1;
+//             new[i].key2 = res->pairs[i].key2;
+//             new[i].payload = res->pairs[i].payload;
+//         }
+//         free(res->pairs);
+//         res->pairs = new;
+//         res->capacity += RESULT_CAPACITY_INCREMENT;
+//     }
+//     //add new pair
+//     res->pairs[res->result_size].key1 = p.key1;
+//     res->pairs[res->result_size].key2 = p.key2;
+//     res->pairs[res->result_size].payload = p.payload;
+//     //increment current number of elements
+//     res->result_size = res->result_size +1;
+    
+//     return;
+// }
 
 
 table load_relation(const char* filename){

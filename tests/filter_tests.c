@@ -4,6 +4,7 @@
 #include "relations.h"
 #include "utils.h"
 #include "acutest.h"
+#include "intermediates.h"
 
 
 void list_init_test(void) {

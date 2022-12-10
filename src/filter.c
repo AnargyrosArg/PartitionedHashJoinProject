@@ -174,3 +174,51 @@ void print_list(list *l){
     }
     printf("\n");
 }
+
+void filter_intermediate(Intermediate* r,Intermediate** ret,int operation,int target,int relid,int colid,table* tabl,int actualid){
+
+ size_t counter = 0;
+
+    // input check
+    if (operation < _EQUALS && operation > _LESS_EQUALS) {
+        fprintf(stderr, "filter_function: Invalid operation.\n");
+        exit(-1);
+    }
+    if(!r->valid_rels[relid]){
+        fprintf(stderr, "filter: given relation not valid in intermediate.\n");
+        exit(-1);
+    }
+    fflush(stderr);
+    // do two passes (could be done in one pass for optimization)
+    // first pass to find length of relation
+    for (int i=0; i<r->rowids_count; i++) {
+        int payload_tmp = tabl[actualid].table[colid][r->rowids[i][relid]];
+        switch(operation) {
+            case _EQUALS:            counter += (payload_tmp == target);     break;
+            case _GREATER:           counter += (payload_tmp > target);      break;
+            case _LESS:              counter += (payload_tmp < target);      break;
+            case _GREATER_EQUALS:    counter += (payload_tmp >= target);     break;
+            case _LESS_EQUALS:       counter += (payload_tmp <= target);     break;
+        }
+    }
+
+    //create intermediate result
+    (*ret) = malloc(sizeof(Intermediate));
+    init_intermediate((*ret));
+    set_intermediate((*ret),counter,r->valid_rels);
+    
+    counter = 0;
+    
+    // second pass to construct resulting relation
+    for (int i=0; i<r->rowids_count; i++) {
+        int payload_tmp = tabl[actualid].table[colid][r->rowids[i][relid]];
+        if ((operation == _EQUALS && payload_tmp == target)
+            || (operation == _GREATER && payload_tmp > target)
+            || (operation == _LESS && payload_tmp < target)
+            || (operation == _GREATER_EQUALS && payload_tmp >= target)
+            || (operation == _LESS_EQUALS && payload_tmp <= target)) {
+                (*ret)->rowids[counter][relid] = r->rowids[i][relid];
+                counter++;
+        }
+    }
+}

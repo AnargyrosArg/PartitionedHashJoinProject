@@ -1,7 +1,8 @@
 BUILD_DIR = ./build
 TEST_DIR = ./tests
 SRC_DIR = ./src
-GCC_FLAGS = -I./include/ -Wall -O2
+INCL_DIR = ./include 
+GCC_FLAGS = -I$(INCL_DIR) -Wall -O2
 SOURCE_FILES = main.c hash1.c partition.c utils.c hashtable.c join.c relations.c parser.c intermediates.c filter.c execqueries.c
 HARNESS_SRC = harness.cpp
 OBJ_FILES = $(addprefix $(BUILD_DIR)/,$(SOURCE_FILES:.c=.o))
@@ -9,8 +10,9 @@ OBJ_FILES = $(addprefix $(BUILD_DIR)/,$(SOURCE_FILES:.c=.o))
 
 .PHONY: clean clean_tests
 
+
 #Default rule, makes executable
-out: $(BUILD_DIR) $(OBJ_FILES) harness
+out: $(BUILD_DIR) $(OBJ_FILES) $(INCL_DIR)/* harness
 	gcc $(GCC_FLAGS) $(BUILD_DIR)/*.o -o out
 
 harness: $(SRC_DIR)/$(HARNESS_SRC)
@@ -33,7 +35,14 @@ $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
 clean: clean_tests
-	rm -rf $(BUILD_DIR)/* ./out ./harness
+	rm -rf $(BUILD_DIR)/* ./out ./harness ./gmon.out ./profile.txt ./profile_exec
 
 clean_tests:
 	@cd $(TEST_DIR) && make clean
+
+
+profile: $(BUILD_DIR) $(OBJ_FILES)
+	gcc $(GCC_FLAGS) -g -pg $(BUILD_DIR)/*.o -o profile_exec
+	./profile_exec < test_input.txt
+	gprof -l ./profile_exec gmon.out > profile.txt
+	rm -rf ./gmon.out ./profile_exec

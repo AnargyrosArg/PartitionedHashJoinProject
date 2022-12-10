@@ -1,3 +1,6 @@
+#ifndef PARSER
+#define PARSER
+
 #define MAX_RELS_PER_QUERY 4 //As per the sigmod 2018 contest website
 
 #include <stdbool.h>
@@ -75,3 +78,5 @@ void parse_query(char* query,QueryInfo* qinfo);
 void query_info_init(QueryInfo* qinfo);
 void query_info_delete(QueryInfo* qinfo);
 void print_query_info(QueryInfo qinfo);
+
+#endif

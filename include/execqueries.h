@@ -7,6 +7,6 @@
 #include "join.h"
 
 
-void printsum(int , int , Intermediates* ,table *);
+void printsum(int , int , Intermediates* ,table *,int );
 void exec_query(QueryInfo*, table*);
 void exec_all_queries(QueryInfo*, table*, uint);
