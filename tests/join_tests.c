@@ -8,7 +8,6 @@ void join_test(void){
     read_file(&relA,"./relations/1pass.txt");
     relation relB;
     read_file(&relB,"./relations/2pass_required.txt");
-asdfadsfadsf
     result res = joinfunction(relA,relB);
     TEST_ASSERT(res.result_size == 1593);
 }
