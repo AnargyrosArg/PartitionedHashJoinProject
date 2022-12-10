@@ -26,6 +26,9 @@ $(BUILD_DIR)/%.o : $(SRC_DIR)/%.c
 test: $(OBJ_FILES)  $(TEST_DIR)
 	cd $(TEST_DIR) && make
 
+test_valgrind: $(OBJ_FILES)  $(TEST_DIR)
+	cd $(TEST_DIR) && make run_tests_valgrind
+
 #Rule to run individual test , eg: make test_hash1
 test_%: $(BUILD_DIR)/%.o $(TEST_DIR)
 	cd $(TEST_DIR) && make $@
