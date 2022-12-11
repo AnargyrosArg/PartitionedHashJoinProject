@@ -25,12 +25,12 @@ void printsum(int rel, int column, Intermediates* inter, table *tabl,int actuali
     else{
         printf("%lu",sum);
     }
-
     return;
 }
 
 
-void selfjoin(int rel1,int rel2,uint col1,uint col2,Intermediate* inter,table* tabl,QueryInfo* query,Intermediates* intermediates,Intermediate** res){
+Intermediate* selfjoin(int rel1,int rel2,uint col1,uint col2,Intermediate* inter,table* tabl,QueryInfo* query,Intermediates* intermediates){
+        Intermediate* res = malloc(sizeof(Intermediate));
         //we have to get the actual realtion from the table, remember that the int rel is the id of the relation in the query, not the actual id of the relation in the table
         int actualid1 = query->rel_ids[rel1];
         int actualid2 = query->rel_ids[rel2];
@@ -46,19 +46,20 @@ void selfjoin(int rel1,int rel2,uint col1,uint col2,Intermediate* inter,table* t
             }
         }
 
-        init_intermediate(*res);
-        set_intermediate(*res,joinres.result_size,inter->valid_rels);
+        init_intermediate(res);
+        set_intermediate(res,joinres.result_size,inter->valid_rels);
         int counter=0;
         for(int i=0;i<inter->rowids_count;i++){
             if(inter->rowids[i][rel1] == joinres.pairs[counter].key1 && inter->rowids[i][rel2] == joinres.pairs[counter].key2){
                 for(int k=0;k<MAX_RELS_PER_QUERY;k++){
-                    (*res)->rowids[counter][k] = inter->rowids[i][k];
+                    (res)->rowids[counter][k] = inter->rowids[i][k];
                 }
                 counter++;
             }
         }
         //we free the memory of relations each time
         delete_result(&joinres);
+        return res;
 }
 
 void exec_query(QueryInfo *query, table* tabl){
@@ -88,7 +89,7 @@ void exec_query(QueryInfo *query, table* tabl){
         filter_intermediate(intermediate,&filter_result,op,value,rel,col,tabl,actualid);
         remove_intermediate(intermediate,intermediates);
         insert_intermediate(filter_result,intermediates);
-        free(filter_result);
+       // free(filter_result);
         current_filter = current_filter->next;
     }
 
@@ -109,14 +110,11 @@ void exec_query(QueryInfo *query, table* tabl){
         Intermediate* inter2;
 
         int index;
-        if((index = in_same_intermediate_relation(intermediates,rel1,rel2)) != -1){
+        if((index = in_same_intermediate_relation(intermediates,rel1,rel2,&inter1)) != -1){
             //get common intermediate , and perform join as a filter on it
-            inter1 = &(intermediates->intermediates[index]);            
-            Intermediate* selfjoin_result;
-            selfjoin(rel1,rel2,col1,col2,inter1,tabl,query,intermediates,&selfjoin_result);
+            Intermediate* selfjoin_result= selfjoin(rel1,rel2,col1,col2,inter1,tabl,query,intermediates);
             remove_intermediate(inter1,intermediates);
             insert_intermediate(selfjoin_result,intermediates);
-            free(selfjoin_result);
         }else{
             get_intermediates(intermediates,rel1,actualid1,&inter1,tabl);
             get_intermediates(intermediates,rel2,actualid2,&inter2,tabl);
@@ -125,7 +123,7 @@ void exec_query(QueryInfo *query, table* tabl){
             remove_intermediate(inter1,intermediates);
             remove_intermediate(inter2,intermediates);
             insert_intermediate(joinres,intermediates);
-            free(joinres);
+            //free(joinres);
        }
        
 

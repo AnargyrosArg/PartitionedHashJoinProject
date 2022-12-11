@@ -21,7 +21,7 @@ typedef struct Intermediate Intermediate;
 struct Intermediates {
     size_t count;
     size_t capacity;
-    Intermediate* intermediates;
+    Intermediate** intermediates;
 };
 
 // array of rowid arrays
@@ -43,7 +43,7 @@ void delete_intermediates(Intermediates* inter_array);
 void relation_to_intermediate(table* tabl,int rel,int actualid,Intermediate** result);
 void set_intermediate(Intermediate* inter,int rowid_count,bool rels[MAX_RELS_PER_QUERY]);
 void get_intermediates(Intermediates* intermediates, uint relation_index,int actualid, Intermediate** ret,table* tabl);
-int in_same_intermediate_relation(Intermediates* inter ,int rel1 , int rel2);
+int in_same_intermediate_relation(Intermediates* inter ,int rel1 , int rel2,Intermediate** ret);
 void insert_intermediate(Intermediate* joinres,Intermediates* intermediates);
 void remove_intermediate(Intermediate* res,Intermediates* intermediates);
 #endif
