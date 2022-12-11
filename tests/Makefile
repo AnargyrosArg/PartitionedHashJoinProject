@@ -16,6 +16,11 @@ run_tests: $(TESTS)
 	$(foreach test,$(TESTS),@echo ==========$(test)==========$(\n)@./$(test)$(\n))
 	@echo ====================================
 
+run_tests_valgrind: $(TESTS)
+	$(foreach test,$(TESTS),@echo ==========$(test)==========$(\n)@valgrind ./$(test)$(\n))
+	@echo ====================================
+
+
 %: %.c
 	gcc $(GCC_FLAGS) $@.c $(BUILD_DIR)/$(@:_tests=.o) -o $@
 

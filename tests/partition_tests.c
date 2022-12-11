@@ -37,6 +37,8 @@ void partition_test(void){
     delete_relation(relA);
     delete_relation(relB);
     delete_part_info(info);
+    delete_relation(info.relA_info.ordered_rel);
+    delete_relation(info.relB_info.ordered_rel);
 
 }
 
