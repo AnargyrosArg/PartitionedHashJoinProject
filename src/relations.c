@@ -79,17 +79,43 @@ table load_relation(const char* filename){
         printf("Could not parse input relation, no header\n");
         exit(-1);
     }
-    
-    table ret;
 
+    // setup table
+    table ret;
     ret.num_tuples = *(uint64_t*)(addr);
     addr += sizeof(uint64_t);
+
     ret.num_colums = *(size_t*)(addr);
     addr += sizeof(size_t);
-    ret.table = malloc(ret.num_colums*sizeof(uint64_t*));
-    for (unsigned i=0;i<ret.num_colums;++i) {
-        ret.table[i] =(uint64_t*)(addr); 
-        addr+=ret.num_tuples*sizeof(uint64_t);
+
+    ret.statistics = malloc(ret.num_colums * sizeof(stats));
+    ret.table = malloc(ret.num_colums * sizeof(uint64_t*));
+    
+    for (unsigned i=0; i<ret.num_colums; ++i) {
+        uint lowest = UINT_MAX, highest = 0;
+
+        ret.table[i] = (uint64_t*)(addr); 
+        addr += ret.num_tuples * sizeof(uint64_t);
+
+        // statistics
+        ret.statistics[i].count = ret.num_tuples;
+        for (int j=0; j<ret.num_tuples; j++) {
+            if (ret.table[i][j] < lowest)  lowest = ret.table[i][j];
+            if (ret.table[i][j] > highest) highest = ret.table[i][j];
+        }
+        ret.statistics[i].lower = lowest;
+        ret.statistics[i].upper = highest;
+        
+        uint N = 50000000, size = highest-lowest+1, distinct_count = 0;
+        size_t distinct_size = (size > N) ? N : size;
+        char distinct_table[distinct_size];
+        memset(distinct_table, 0, distinct_size);
+
+        for (int j=0; j<ret.num_tuples; j++)
+            distinct_table[(ret.table[i][j] - lowest) % distinct_size] = 1;
+        for (int j=0; j<distinct_size; j++)
+            distinct_count += distinct_table[j];
+        ret.statistics[i].distinct = distinct_count;
     }
 
 
@@ -99,13 +125,25 @@ table load_relation(const char* filename){
 
 void delete_table(table* table){
     free(table->table);
+    free(table->statistics);
 }
 
-void print_table(table t){
-    for(uint64_t tuple=0;tuple<t.num_tuples;tuple++){
-        for(uint64_t column=0;column<t.num_colums;column++){
-            printf("%ld|",t.table[column][tuple]);
+// prints table (if only_stats is true, only table statistics will be printed)
+void print_table(table t, int only_stats) {
+    if (!only_stats) {
+        for(uint64_t tuple=0;tuple<t.num_tuples;tuple++){
+            for(uint64_t column=0;column<t.num_colums;column++){
+                printf("%ld|",t.table[column][tuple]);
+            }
+            printf("\n");
         }
-        printf("\n");
     }
+
+    // print statistics
+    printf("====== statistics: ======\nlower\tupper\tcount\tdistinct\n");
+    for (int i=0; i<t.num_colums; i++) {
+        stats stat = t.statistics[i];
+        printf("%d\t%d\t%u\t%u\n", stat.lower, stat.upper, stat.count, stat.distinct);
+    }
+    printf("\n");
 }

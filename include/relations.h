@@ -2,6 +2,8 @@
 #include "inttypes.h"
 #include <sys/mman.h>
 #include <stdio.h>
+#include <limits.h>
+#include <string.h>
 
 #ifndef MYTYPES_H
 #define MYTYPES_H
@@ -20,6 +22,8 @@ typedef struct relation relation;
 typedef struct pair pair;
 
 typedef struct result result;
+
+typedef struct stats stats;
 
 
 
@@ -45,10 +49,18 @@ struct result{
     int capacity;
 };
 
+struct stats {
+    int lower;
+    int upper;
+    uint count;
+    uint distinct;
+};
+
 
 struct table{
     uint64_t num_tuples;
     size_t num_colums;
+    stats* statistics;
     //2 dimensional array;Used as table[column][tuple]
     uint64_t** table;
 };
@@ -61,4 +73,4 @@ void delete_result(result* res);
 
 table load_relation(const char* filename);
 void delete_table(table*);
-void print_table(table);
+void print_table(table, int only_stats);

@@ -58,6 +58,7 @@ int main(int argc, char** argv) {
     
     //free tables mem
     for(int i =0;i<n_tables;i++){
+        print_table(tables[i], 1);
         delete_table(&(tables[i]));
     }
     free(tables);
