@@ -5,6 +5,7 @@
 #include "relations.h"
 #include "utils.h"
 #include "execqueries.h"
+#include "optimizer.h"
 
 #define MAX_LINE_SIZE 100
 #define MAX_N_TABLES 25
@@ -52,13 +53,27 @@ int main(int argc, char** argv) {
     }
     free(line);
 
+    // testing things
+    QueryInfo query = queries[0];
+    print_query_info(query);
+    FilterInfo* current_filter = query.filters;
+
+    query_stats* qstats = init_query_stats(&query, tables);
+    print_query_stats(qstats);
+    delete_query_stats(&qstats);
+
+    while (current_filter != NULL) {
+        qstats = update_query_stats_filter(qstats, current_filter);
+        current_filter = current_filter->next;
+    }
+
 
     //harness waits for result before sending next batch , so we have to execute queries as they come    
     //exec_all_queries(queries, tables, n_queries);
     
     //free tables mem
     for(int i =0;i<n_tables;i++){
-        print_table(tables[i], 1);
+        // print_table(tables[i], 1);
         delete_table(&(tables[i]));
     }
     free(tables);

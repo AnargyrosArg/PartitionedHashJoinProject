@@ -24,6 +24,7 @@ typedef struct pair pair;
 typedef struct result result;
 
 typedef struct stats stats;
+typedef struct query_stats query_stats;
 
 
 
@@ -56,11 +57,17 @@ struct stats {
     uint distinct;
 };
 
+// statistics for each column of each relation in a query
+struct query_stats {
+    size_t num_query_rels;
+    size_t* cols_per_rel;
+    stats** statistics;
+};
 
 struct table{
     uint64_t num_tuples;
     size_t num_colums;
-    stats* statistics;
+    stats* statistics; // stores initial statistics for each column of table
     //2 dimensional array;Used as table[column][tuple]
     uint64_t** table;
 };

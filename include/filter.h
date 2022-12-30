@@ -1,3 +1,6 @@
+#ifndef FILTER
+#define FILTER
+
 #include <stdio.h>
 
 #include "relations.h"
@@ -25,3 +28,5 @@ void print_list(list *l);
 void filter_function(relation* r, relation* ret, int operation, int target);
 void better_filter_function(relation* r, relation* ret, int operation, int target);
 void filter_intermediate(Intermediate* r,Intermediate** ret,int operation,int target,int relid,int colid,table* tabl,int actualid);
+
+#endif
