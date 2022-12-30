@@ -28,7 +28,7 @@ void printsum(int rel, int column, Intermediates* inter, table *tabl,int actuali
     return;
 }
 
-
+//TODO: move this to join.c
 Intermediate* selfjoin(int rel1,int rel2,uint col1,uint col2,Intermediate* inter,table* tabl,QueryInfo* query,Intermediates* intermediates){
         Intermediate* res = malloc(sizeof(Intermediate));
         //we have to get the actual realtion from the table, remember that the int rel is the id of the relation in the query, not the actual id of the relation in the table
@@ -62,7 +62,8 @@ Intermediate* selfjoin(int rel1,int rel2,uint col1,uint col2,Intermediate* inter
         return res;
 }
 
-void exec_query(QueryInfo *query, table* tabl){
+void exec_query(QueryInfo *query, table* tabl,jobscheduler* scheduler){
+    
     FilterInfo* current_filter = query->filters;
     JoinInfo* current_join = query->joins;
     SelectionInfo* current_proj = query->projections;
@@ -93,6 +94,7 @@ void exec_query(QueryInfo *query, table* tabl){
         current_filter = current_filter->next;
     }
 
+
     //now we continue with the joins
     //we pass all the join list till the end
     while(current_join !=NULL){
@@ -119,7 +121,11 @@ void exec_query(QueryInfo *query, table* tabl){
             get_intermediates(intermediates,rel1,actualid1,&inter1,tabl);
             get_intermediates(intermediates,rel2,actualid2,&inter2,tabl);
             //execute join operation normally
-            Intermediate* joinres = join_intermediates(inter1,inter2,query,rel1,col1,rel2,col2,tabl);
+            //serialized execution
+            //Intermediate* joinres = join_intermediates(inter1,inter2,query,rel1,col1,rel2,col2,tabl);
+            //parallel execution
+            Intermediate* joinres = parallel_join(inter1,inter2,query,rel1,col1,rel2,col2,tabl,scheduler);
+            
             remove_intermediate(inter1,intermediates);
             remove_intermediate(inter2,intermediates);
             insert_intermediate(joinres,intermediates);
@@ -152,14 +158,16 @@ void exec_query(QueryInfo *query, table* tabl){
     printf("\n");
     fflush(stdout);
     delete_intermediates(intermediates);
+
+    //free(scheduler);
+
     return;
 }
 
 //function that executes all the queries
-void exec_all_queries(QueryInfo *queries,table *tabl,uint num_queries){
-
+void exec_all_queries(QueryInfo *queries,table *tabl,uint num_queries,jobscheduler* scheduler){
     for (int i=0;i<num_queries;i++){
-        exec_query(&queries[i],tabl);
+        exec_query(&queries[i],tabl,scheduler);
     }
     return;
 }

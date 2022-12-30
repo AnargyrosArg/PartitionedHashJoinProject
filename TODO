@@ -1,1 +1,5 @@
-1.Dynamically allocate more intermediate results after START_N_INTERMEDIATES
+//this is not necessary , number of intermediates capped at 4 due to to the max number of relations per query
+Dynamically allocate more intermediate results after START_N_INTERMEDIATES
+
+Linked list for queue instead of array
+

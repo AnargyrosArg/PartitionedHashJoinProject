@@ -23,6 +23,10 @@ int main(int argc, char** argv) {
     tables = malloc(MAX_N_TABLES * sizeof(table));
     queries = malloc(MAX_N_QUERIES * sizeof(QueryInfo));
 
+    //init job scheduler
+    jobscheduler* scheduler = malloc(sizeof(jobscheduler));
+    init_scheduler(scheduler);
+    
     //buffer for reading input
     char* line = malloc(MAX_LINE_SIZE*sizeof(char));
     size_t line_max_size = MAX_LINE_SIZE;
@@ -48,7 +52,7 @@ int main(int argc, char** argv) {
                 line[strlen(line)-1] = 0;
         if (strcmp(line,"F")==0) continue; // End of a batch
         parse_query(line,&(queries[n_queries++]));
-        exec_query(&queries[current++],tables);
+        exec_query(&queries[current++],tables,scheduler);
     }
     free(line);
 
@@ -68,5 +72,6 @@ int main(int argc, char** argv) {
     }
     free(queries);
 
+    //TODO free and destroy scheduler
     return 0;
 }
