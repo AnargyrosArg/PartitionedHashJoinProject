@@ -26,7 +26,14 @@
         "hash1.h": "c",
         "acutest.h": "c",
         "join.h": "c",
-        "intermediates.h": "c"
+        "intermediates.h": "c",
+        "inttypes.h": "c",
+        "mman.h": "c",
+        "execqueries.h": "c",
+        "parser.h": "c",
+        "intemediates.h": "c",
+        "filter.h": "c",
+        "thread": "c"
     },
     "makefile.launchConfigurations": [
         {

@@ -7,8 +7,8 @@
 #define MYTYPES_H
 
 
-#define INITIAL_RESULT_CAPACITY 100
-
+#define INITIAL_RESULT_CAPACITY 50000
+#define RESULT_CAPACITY_INCREMENT 5000
 
 
 typedef struct tuple tuple;

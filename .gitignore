@@ -11,3 +11,11 @@ harness
 gmon.out
 profile
 tests/filter_tests
+profile.txt
+profile_exec
+small.txt
+analysis.txt
+tests/intermediates_tests
+old_profile.txt
+public.txt
+test.txt

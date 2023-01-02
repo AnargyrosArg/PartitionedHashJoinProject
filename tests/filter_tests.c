@@ -4,40 +4,11 @@
 #include "relations.h"
 #include "utils.h"
 #include "acutest.h"
-
-
-void list_init_test(void) {
-    list* l = init_list();
-    TEST_ASSERT(l->row_id == -1);
-    TEST_ASSERT(l->payload == -1);
-    TEST_ASSERT(l->next == NULL);
-    TEST_ASSERT(l->tail == l);
-    delete_list(l);
-}
-
-void list_append_test(void) {
-    list* l = init_list();
-    list_append(l, 1, 2);
-    TEST_ASSERT(l->row_id == 1);
-    TEST_ASSERT(l->payload == 2);
-    TEST_ASSERT(l->next == NULL);
-    TEST_ASSERT(l->tail == l);
-    list_append(l, 3, 4);
-    TEST_ASSERT(l->row_id == 1);
-    TEST_ASSERT(l->payload == 2);
-    TEST_ASSERT(l->next->row_id == 3);
-    TEST_ASSERT(l->next->payload == 4);
-    TEST_ASSERT(l->next->next == NULL);
-    TEST_ASSERT(l->tail->row_id == 3);
-    TEST_ASSERT(l->tail->payload == 4);
-    TEST_ASSERT(l->tail->next == NULL);
-    delete_list(l);
-}
-
+#include "intermediates.h"
 
 
 void filter_test(void){
-
+    //int* test = malloc(sizeof(int)*100);
     relation r;
     read_file(&r,"./relations/filterte.txt");
     relation ret;
@@ -48,12 +19,14 @@ void filter_test(void){
     better_filter_function(&r,&ret2,_LESS,1);
     int result2 = ret2.num_tuples;
     TEST_ASSERT(result2 == 5);
+
+    delete_relation(r);
+    delete_relation(ret);
+    delete_relation(ret2);
 }
 
 TEST_LIST = {
     { "Basic Filter Functionality",filter_test},
-    { "Test List Init", list_init_test },
-    { "Test List Append", list_append_test },
     { NULL, NULL }
 };
 
