@@ -164,6 +164,19 @@ void exec_query(QueryInfo *query, table* tabl,jobscheduler* scheduler){
     return;
 }
 
+//function of a thread
+void *thread_function(void *args){
+    ThreadArgs* arg = (ThreadArgs*)args;
+    QueryInfo* query = arg->query;
+    table* tabl = arg->tabl;
+    jobscheduler* scheduler = arg->scheduler;
+
+    exec_query(query,tabl,scheduler);
+
+    return NULL;
+}
+
+
 //function that executes all the queries
 void exec_all_queries(QueryInfo *queries,table *tabl,uint num_queries,jobscheduler* scheduler){
     for (int i=0;i<num_queries;i++){

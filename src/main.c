@@ -50,9 +50,19 @@ int main(int argc, char** argv) {
         for (int i=0; i<2; i++)
             if ((line[strlen(line)-1] == 10) || (line[strlen(line)-1] == 13))
                 line[strlen(line)-1] = 0;
-        if (strcmp(line,"F")==0) continue; // End of a batch
+        // End of a batch,we have to execute all the queries
+        if (strcmp(line,"F")==0) {
+            exec_all_queries(queries, tables, n_queries,scheduler);
+            
+            //we have to reset the queries array
+            for(int i=0;i<n_queries;i++){
+                query_info_delete(&(queries[i]));
+            }
+            n_queries = 0;
+            continue;
+        }
         parse_query(line,&(queries[n_queries++]));
-        exec_query(&queries[current++],tables,scheduler);
+        //exec_query(&queries[current++],tables,scheduler);
     }
     free(line);
 
@@ -67,9 +77,6 @@ int main(int argc, char** argv) {
     free(tables);
     
     //free queries mem
-    for(int i=0;i<n_queries;i++){
-        query_info_delete(&(queries[i]));
-    }
     free(queries);
 
     //TODO free and destroy scheduler
