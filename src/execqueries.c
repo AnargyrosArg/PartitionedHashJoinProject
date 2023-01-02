@@ -180,41 +180,104 @@ exec_result* exec_query(QueryInfo *query, table* tabl,jobscheduler* scheduler){
     return res;
 }
 
+//we need it to make sure the threads take different queries
+int querycounter = 0;
+//we need a mutex
+pthread_mutex_t mtx;
+
 //function of a thread
 void *thread_function(void *args){
     ThreadArgs* arg = (ThreadArgs*)args;
-    QueryInfo* query = arg->query;
+
+    //we lock the mutex
+    pthread_mutex_lock(&mtx);
+    QueryInfo* query = &arg->query[querycounter];
+    int querynum = querycounter;
+    querycounter++;
+    //we unlock the mutex
+    pthread_mutex_unlock(&mtx);
+
     table* tabl = arg->tabl;
     jobscheduler* scheduler = arg->scheduler;
 
-    exec_query(query,tabl,scheduler);
+    exec_result *res= exec_query(query,tabl,scheduler);
+    res->numofquery = querynum;
 
-    return NULL;
+
+    return res;
 }
 
 
 //function that executes all the queries
 void exec_all_queries(QueryInfo *queries,table *tabl,uint num_queries,jobscheduler* scheduler){
+    //we create the threads
+    pthread_t threads[num_queries];
+    //array to store the result of each thread, we need it cause we want to print them in order
+    exec_result* results[num_queries];
+
+    //create the mutex
+    pthread_mutex_init(&mtx,NULL);
+
+    // Initialize the results array to NULL
+    for (int i = 0; i < num_queries; i++) {
+        results[i] = NULL;
+    }
+
+    //we have to reset the querycounter to 0
+    querycounter = 0;
+
+
+    //we create the threads
     for (int i=0;i<num_queries;i++){
+        ThreadArgs args = { queries, tabl, scheduler };
+        pthread_create(&threads[i],NULL,thread_function,&args);
+    }
 
-        exec_result *res= exec_query(&queries[i],tabl,scheduler);
+    //we wait for the threads to finish and get the results of each one
+    int j=0;
+    for (j=0;j<num_queries;j++){
+        pthread_join(threads[j],(void**)&results[j]);
+    }
 
-        //we print the result
-        for(int j=0;j<res->numofprojections;j++){
-            if(res->sums[j]==0){
+    //now we have to print the results in order
+    int k;
+    for(k=0;k<num_queries;k++){
+        //first we find the res that holds the same num as the k
+        int m;
+        for( m=0;m<num_queries;m++){
+            if(results[m]->numofquery == k){
+                break;
+            }
+        }
+
+        int l;
+        for(l=0;l<results[m]->numofprojections;l++){
+
+            if(results[m]->sums[l] == 0){
                 printf("NULL");
             }
             else{
-                printf("%lu",res->sums[j]);
+                printf("%lu",results[m]->sums[l]);
             }
-            if(j!=res->numofprojections-1){
+
+            if(l!=results[m]->numofprojections-1){
                 printf(" ");
             }
-            if(j==res->numofprojections-1){
+            if(l==results[m]->numofprojections-1){
                 printf("\n");
+            }
         }
-        }
-        fflush(stdout);
     }
+    fflush(stdout);
+
+    // Destroy the mutex
+    pthread_mutex_destroy(&mtx);
+
+    // Free the memory allocated for the exec_result structures
+  for (int i = 0; i < num_queries; i++) {
+    free(results[i]->sums);
+    free(results[i]);
+  }
+
     return;
 }
