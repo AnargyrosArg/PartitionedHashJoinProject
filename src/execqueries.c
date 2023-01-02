@@ -1,8 +1,8 @@
 #include "execqueries.h" 
 
 
-//function that prints the sum of one projection
-void printsum(int rel, int column, Intermediates* inter, table *tabl,int actualid){
+//function that returns the sum of one projection
+uint64_t printsum(int rel, int column, Intermediates* inter, table *tabl,int actualid){
     uint64_t sum =0;
     //first we need to get the relation from the intermediates
     Intermediate* intermediate;
@@ -17,15 +17,14 @@ void printsum(int rel, int column, Intermediates* inter, table *tabl,int actuali
         //printf("value %d is %lu ",i,sum);
     }
 
-    //if the sum is equal to 0 then we print NULL
+    //if the sum is equal to 0 then we return 0
     if(sum == 0){
-        printf("NULL");
+        return 0;
 
     }
     else{
-        printf("%lu",sum);
+        return sum;
     }
-    return;
 }
 
 //TODO: move this to join.c
@@ -62,7 +61,8 @@ Intermediate* selfjoin(int rel1,int rel2,uint col1,uint col2,Intermediate* inter
         return res;
 }
 
-void exec_query(QueryInfo *query, table* tabl,jobscheduler* scheduler){
+//now returns the result of the join instead of printing it
+exec_result* exec_query(QueryInfo *query, table* tabl,jobscheduler* scheduler){
     
     FilterInfo* current_filter = query->filters;
     JoinInfo* current_join = query->joins;
@@ -140,28 +140,44 @@ void exec_query(QueryInfo *query, table* tabl,jobscheduler* scheduler){
         
     }
 
-    //now that we finished with the joins and the filter all we have to do is do the projections and print the sum
+    //now that we finished with the joins and the filter all we have to do is do the projections and return the sum
     //we pass all the projection list till the end
+
+    //we firstly have to get the number of projections
+    int proj_counter = 0;
+    //we pass all the projection list till the end to count the number of projections
+    SelectionInfo* proj1 = query->projections;
+    while(proj1!=NULL){
+        proj_counter++;
+        proj1 = proj1->next;
+    }
+
+    //we create the result struct
+    exec_result* res = (exec_result*)malloc(sizeof(exec_result));
+    res->numofprojections = proj_counter;
+    res->sums = (uint64_t*)malloc(sizeof(uint64_t)*proj_counter);
+
+    //now we have to pass again the projection list to get the sum of each projection
+    int counter = 0;
     while(current_proj != NULL){
         int projrel = current_proj->rel_id;
         int projcol = current_proj->col_id;
         //we get the actual relation from the table
         int actualid = query->rel_ids[projrel];
+
         //now we just run the sum function for every projection
-        printsum(projrel, projcol, intermediates,&tabl[actualid],actualid);
-        if(current_proj->next!=NULL){
-            printf(" ");
-        }
+        uint64_t tempsum= printsum(projrel, projcol, intermediates,&tabl[actualid],actualid);
+        res->sums[counter] = tempsum;
+        counter++;
+
         //we move on to the next projection
         current_proj = current_proj->next;
     }
-    printf("\n");
-    fflush(stdout);
     delete_intermediates(intermediates);
 
     //free(scheduler);
 
-    return;
+    return res;
 }
 
 //function of a thread
@@ -180,7 +196,25 @@ void *thread_function(void *args){
 //function that executes all the queries
 void exec_all_queries(QueryInfo *queries,table *tabl,uint num_queries,jobscheduler* scheduler){
     for (int i=0;i<num_queries;i++){
-        exec_query(&queries[i],tabl,scheduler);
+
+        exec_result *res= exec_query(&queries[i],tabl,scheduler);
+
+        //we print the result
+        for(int j=0;j<res->numofprojections;j++){
+            if(res->sums[j]==0){
+                printf("NULL");
+            }
+            else{
+                printf("%lu",res->sums[j]);
+            }
+            if(j!=res->numofprojections-1){
+                printf(" ");
+            }
+            if(j==res->numofprojections-1){
+                printf("\n");
+        }
+        }
+        fflush(stdout);
     }
     return;
 }

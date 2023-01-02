@@ -14,8 +14,15 @@ typedef struct {
   jobscheduler* scheduler;
 } ThreadArgs;
 
-void printsum(int , int , Intermediates* ,table *,int );
-void exec_query(QueryInfo*, table*,jobscheduler*);
+//struct that holds the information for the projections of each query
+typedef struct{
+    int numofprojections;
+    uint64_t *sums;
+} exec_result;
+
+
+uint64_t printsum(int , int , Intermediates* ,table *,int );
+exec_result* exec_query(QueryInfo*, table*,jobscheduler*);
 void exec_all_queries(QueryInfo*, table*, uint,jobscheduler*);
 
-void *thread_funct(void *);
+void *thread_function(void *);
