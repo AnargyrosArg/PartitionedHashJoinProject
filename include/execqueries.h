@@ -19,7 +19,7 @@ typedef struct {
 typedef struct{
     int numofprojections;
     uint64_t *sums;
-    int numofquery;
+    int numofquery; //this is the number of the query, we need it to print the results in order
 } exec_result;
 
 
