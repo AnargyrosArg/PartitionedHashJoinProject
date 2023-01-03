@@ -3,7 +3,7 @@ TEST_DIR = ./tests
 SRC_DIR = ./src
 INCL_DIR = ./include 
 GCC_FLAGS = -I$(INCL_DIR) -Wall -O2
-SOURCE_FILES = main.c hash1.c partition.c utils.c hashtable.c join.c relations.c parser.c intermediates.c filter.c execqueries.c optimizer.c
+SOURCE_FILES = main.c hash1.c partition.c utils.c hashtable.c join.c relations.c parser.c intermediates.c filter.c execqueries.c stats.c
 HARNESS_SRC = harness.cpp
 OBJ_FILES = $(addprefix $(BUILD_DIR)/,$(SOURCE_FILES:.c=.o))
 
@@ -13,14 +13,14 @@ OBJ_FILES = $(addprefix $(BUILD_DIR)/,$(SOURCE_FILES:.c=.o))
 
 #Default rule, makes executable
 out: $(BUILD_DIR) $(OBJ_FILES) $(INCL_DIR)/* harness
-	gcc $(GCC_FLAGS) $(BUILD_DIR)/*.o -o out
+	gcc $(GCC_FLAGS) $(BUILD_DIR)/*.o -o out -lm
 
 harness: $(SRC_DIR)/$(HARNESS_SRC)
 	g++ $(SRC_DIR)/$(HARNESS_SRC) -o $@
 
 #Compiles each source file into its object file individually 
 $(BUILD_DIR)/%.o : $(SRC_DIR)/%.c
-	gcc $(GCC_FLAGS) -c $< -o $@
+	gcc $(GCC_FLAGS) -c $< -o $@ -lm
 
 #Rule to run all tests , there is a separate Makefile in the tests directory that we simply run 
 test: $(OBJ_FILES)  $(TEST_DIR)
@@ -45,7 +45,7 @@ clean_tests:
 
 
 profile: $(BUILD_DIR) $(OBJ_FILES)
-	gcc $(GCC_FLAGS) -g -pg $(BUILD_DIR)/*.o -o profile_exec
+	gcc $(GCC_FLAGS) -g -pg $(BUILD_DIR)/*.o -o profile_exec -lm
 	./profile_exec < test_input.txt
 	gprof -l ./profile_exec gmon.out > profile.txt
 	rm -rf ./gmon.out ./profile_exec

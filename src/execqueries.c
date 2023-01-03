@@ -14,7 +14,7 @@ void printsum(int rel, int column, Intermediates* inter, table *tabl,int actuali
         uint rowid = intermediate->rowids[i][rel];
         uint64_t value = tabl->table[column][rowid];
         sum += value;
-        //printf("value %d is %lu ",i,sum);
+        // printf("(%d %lu) ",i,sum);
     }
 
     //if the sum is equal to 0 then we print NULL
@@ -69,6 +69,11 @@ void exec_query(QueryInfo *query, table* tabl){
     // debug tools
     int join_counter = 0;
 
+    // statistics
+    // printf("initial stats:\n"); fflush(stdout);
+    query_stats* stat = init_query_stats(query, tabl);
+    // print_query_stats(stat);
+
     //we create the intermediate struct that we will use to store the results
     Intermediates* intermediates = init_intermediates();
 
@@ -92,6 +97,14 @@ void exec_query(QueryInfo *query, table* tabl){
        // free(filter_result);
         current_filter = current_filter->next;
     }
+
+    // filter statistics
+    // printf("stats after filters:\n"); fflush(stdout);
+    stat = update_query_stats_filter(tabl, stat, query);
+    // print_query_stats(stat);
+
+    // printf("intermediates after filters:\n"); fflush(stdout);
+    // print_intermediates(intermediates, 0);
 
     //now we continue with the joins
     //we pass all the join list till the end
@@ -125,7 +138,15 @@ void exec_query(QueryInfo *query, table* tabl){
             insert_intermediate(joinres,intermediates);
             //free(joinres);
        }
-       
+
+        // join statistics
+        printf("stats after join %d:\n", join_counter); fflush(stdout);
+        stat = update_query_stats_join(tabl, stat, query, join_counter);
+        print_query_stats(stat);
+
+        printf("intermediates after %d join:\n", join_counter); fflush(stdout);
+        print_intermediates(intermediates, 0);
+
 
         //we coninue to the next join
         current_join = current_join->next;
@@ -133,6 +154,14 @@ void exec_query(QueryInfo *query, table* tabl){
 
         
     }
+
+    // final statistics/intermediates comparisson
+    // printf("final stats:\n");
+    // print_query_stats(stat);
+    // printf("final intermediates:\n");
+    // print_intermediates(intermediates, 0);
+    // printf("========================================\n");
+    // fflush(stdout);
 
     //now that we finished with the joins and the filter all we have to do is do the projections and print the sum
     //we pass all the projection list till the end
@@ -152,6 +181,7 @@ void exec_query(QueryInfo *query, table* tabl){
     printf("\n");
     fflush(stdout);
     delete_intermediates(intermediates);
+    delete_query_stats(&stat);
     return;
 }
 

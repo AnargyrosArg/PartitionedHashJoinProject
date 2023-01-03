@@ -59,9 +59,10 @@ struct stats {
 
 // statistics for each column of each relation in a query
 struct query_stats {
-    size_t num_query_rels;
-    size_t* cols_per_rel;
-    stats** statistics;
+    size_t num_query_rels; // number of relations involved in query
+    size_t* cols_per_rel;  // number of columns for each relation
+    stats** statistics;    // statistics for each column of each relation
+    int** connections;     // array for each relation, showing which relations it has been joined with (we assume it is joined with itself by default)
 };
 
 struct table{
