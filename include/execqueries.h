@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "intermediates.h"
 #include "parser.h"
@@ -18,6 +19,7 @@ typedef struct {
 typedef struct{
     int numofprojections;
     uint64_t *sums;
+    int numofquery; //this is the number of the query, we need it to print the results in order
 } exec_result;
 
 
