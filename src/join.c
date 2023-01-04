@@ -35,7 +35,7 @@ result joinfunction(relation r, relation s){
         //size of neighbour starts at 8
         //must free memory at the end 
         int H = 8;
-        hashtable *tableR = init_hashtable(bucketsizeA,H);
+        hashtable *tableR = init_hashtable(bucketsizeA,H,hash2);
         //print_hashtable(tableR);
 
         //now that we created our hashtable we want to insert every tuple of the partition into the hashtable 
@@ -119,7 +119,7 @@ Intermediate* join_intermediates(Intermediate* inter1,Intermediate* inter2,Query
         //size of neighbour starts at 8
         //must free memory at the end 
         int H = 8;
-        hashtable *tableR = init_hashtable(bucketsizeA,H);
+        hashtable *tableR = init_hashtable(bucketsizeA,H,hash2);
         //print_hashtable(tableR);
 
         //now that we created our hashtable we want to insert every tuple of the partition into the hashtable 

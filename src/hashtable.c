@@ -11,6 +11,9 @@ unsigned int hash2(unsigned int x, unsigned int max) {
     return x % max;
 }
 
+// simple linear hash function (used for optimizer's dynamic programming)
+unsigned int hash_simple(unsigned int x, unsigned int max) { return x; }
+
 
 // prints hash table, for debug purposes
 void print_hashtable(hashtable* table) {
@@ -42,7 +45,7 @@ hashbucket* init_hashbucket(int n) {
 
 
 // initialize hash table
-hashtable *init_hashtable(int n, int H) {
+hashtable *init_hashtable(int n, int H, unsigned int (*hash_ptr)(unsigned int, unsigned int)) {
     // input check
     if (H > n) {
         //printf("init_hashtable error: hash table size cannot be greater than neighbouhood\n");
@@ -62,6 +65,7 @@ hashtable *init_hashtable(int n, int H) {
     ht->tablesize = 2*n;
     ht->nbsize = H;
     ht->htbuckets = malloc((2*n)*sizeof(hashbucket*)); // FREE THIS PLS
+    ht->hash_ptr = hash_ptr;
 
     for (int i=0; i<ht->tablesize; i++)
         ht->htbuckets[i] = init_hashbucket(H);
@@ -95,7 +99,7 @@ void bucket_swap(hashtable* table, int empty_bucket, int other_bucket, int bit) 
 // takes key, and searches hash table. If search succeeds, the data (rowid) is stored in "ret"
 int* search_hashtable(hashtable* table, int key, int* ret_size) {
     int table_size = table->tablesize;
-    unsigned int hash_value = hash2(key, table_size);
+    unsigned int hash_value = (table->hash_ptr)(key, table_size);
 
     for (int i=0; i<table->nbsize; i++) { // search neighborhood
         if (table->htbuckets[((hash_value+i) % table_size)]->key == key) {
@@ -115,7 +119,7 @@ hashtable* insert_hashtable(hashtable* table, int key, int data) {
     int hashtable_full = 1, swapped, bit_num, pos, tmp_pos, tmp_j;
     int table_size = table->tablesize;
     int neighborhood_size = table->nbsize;
-    unsigned int hash_value = hash2(key, table_size);
+    unsigned int hash_value = (table->hash_ptr)(key, table_size);
     int map_full = bitmap_full(table->htbuckets[hash_value]->bitmap, neighborhood_size);
 
     //printf("\ninserting %d using key %d, mapping to index %u\n", data, key, hash_value);
@@ -190,7 +194,8 @@ hashtable* insert_hashtable(hashtable* table, int key, int data) {
 void rehash_hashtable(hashtable **ht, int cause_key, int cause_data) {
     int original_size = (*ht)->tablesize;
 
-    hashtable *ht2 = init_hashtable(original_size, (*ht)->nbsize); // "init_hashtable" initializes table with 2*original_size
+    // "init_hashtable" initializes table with 2*original_size
+    hashtable *ht2 = init_hashtable(original_size, (*ht)->nbsize, (*ht)->hash_ptr);
 
     for (int i=0; i<original_size; i++) { // re-insert everything to new hash table
         if ((*ht)->htbuckets[i]->rowids[0] != -1) { // for every bucket

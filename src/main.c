@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
 
     //harness waits for result before sending next batch , so we have to execute queries as they come    
     //exec_all_queries(queries, tables, n_queries);
-    
+
     //free tables mem
     for(int i =0;i<n_tables;i++){
         // print_table(tables[i], 1);
