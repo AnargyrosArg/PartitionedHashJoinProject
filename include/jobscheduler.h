@@ -52,13 +52,15 @@ struct jobscheduler
     //condition variable that signals worker threads that work is available
     pthread_cond_t work_cond;
     pthread_mutex_t work_mutex;
+    
+    bool DONE;
 };
 
 
 bool isFull(jobqueue*);
 bool isEmpty(jobqueue*);
 void schedule_job(jobscheduler* scheduler,job j);
-
+void delete_scheduler(jobscheduler* scheduler);
 void init_scheduler(jobscheduler* scheduler);
 
 #endif

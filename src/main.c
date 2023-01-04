@@ -80,5 +80,7 @@ int main(int argc, char** argv) {
     free(queries);
 
     //TODO free and destroy scheduler
+    delete_scheduler(scheduler);
+    free(scheduler);
     return 0;
 }
