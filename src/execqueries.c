@@ -192,7 +192,7 @@ void *thread_function(void *args){
     //we lock the mutex
     pthread_mutex_lock(&mtx);
     QueryInfo* query = &arg->query[querycounter];
-    int querynum = querycounter;
+    int querynum = querycounter%MAX_QUERY_THREADS;
     querycounter++;
     //we unlock the mutex
     pthread_mutex_unlock(&mtx);
@@ -211,73 +211,71 @@ void *thread_function(void *args){
 //function that executes all the queries
 void exec_all_queries(QueryInfo *queries,table *tabl,uint num_queries,jobscheduler* scheduler){
     //we create the threads
-    pthread_t threads[num_queries];
+    pthread_t threads[MAX_QUERY_THREADS];
     //array to store the result of each thread, we need it cause we want to print them in order
-    exec_result* results[num_queries];
+    exec_result* results[MAX_QUERY_THREADS];
 
     //create the mutex
     pthread_mutex_init(&mtx,NULL);
 
     // Initialize the results array to NULL
-    for (int i = 0; i < num_queries; i++) {
+    for (int i = 0; i < MAX_QUERY_THREADS; i++) {
         results[i] = NULL;
     }
 
     //we have to reset the querycounter to 0
     querycounter = 0;
 
+    while(querycounter < num_queries){        
+        //we create the threads
+        for (int i=0;i<MAX_QUERY_THREADS;i++){
+            ThreadArgs args = { queries, tabl, scheduler };
+            pthread_create(&threads[i],NULL,thread_function,&args);
+        }
+        //we wait for the threads to finish and get the results of each one
+        int j=0;
+        for (j=0;j<MAX_QUERY_THREADS;j++){
+            pthread_join(threads[j],(void**)&results[j]);
+        }
+        //now we have to print the results in order
+        int k;
+        for(k=0;k<MAX_QUERY_THREADS;k++){
+            //first we find the res that holds the same num as the k
+            int m;
+            for( m=0;m<MAX_QUERY_THREADS;m++){
+                if(results[m]->numofquery == k){
+                    break;
+                }
+            }
 
-    //we create the threads
-    for (int i=0;i<num_queries;i++){
-        ThreadArgs args = { queries, tabl, scheduler };
-        pthread_create(&threads[i],NULL,thread_function,&args);
-    }
+            int l;
+            for(l=0;l<results[m]->numofprojections;l++){
+                if(results[m]->sums[l] == 0){
+                    printf("NULL");
+                }
+                else{
+                    printf("%lu",results[m]->sums[l]);
+                }
 
-    //we wait for the threads to finish and get the results of each one
-    int j=0;
-    for (j=0;j<num_queries;j++){
-        pthread_join(threads[j],(void**)&results[j]);
-    }
-
-    //now we have to print the results in order
-    int k;
-    for(k=0;k<num_queries;k++){
-        //first we find the res that holds the same num as the k
-        int m;
-        for( m=0;m<num_queries;m++){
-            if(results[m]->numofquery == k){
-                break;
+                if(l!=results[m]->numofprojections-1){
+                    printf(" ");
+                }
+                if(l==results[m]->numofprojections-1){
+                    printf("\n");
+                }
             }
         }
+        fflush(stdout);
 
-        int l;
-        for(l=0;l<results[m]->numofprojections;l++){
-
-            if(results[m]->sums[l] == 0){
-                printf("NULL");
-            }
-            else{
-                printf("%lu",results[m]->sums[l]);
-            }
-
-            if(l!=results[m]->numofprojections-1){
-                printf(" ");
-            }
-            if(l==results[m]->numofprojections-1){
-                printf("\n");
-            }
-        }
+        // Free the memory allocated for the exec_result structures
+    for (int i = 0; i < MAX_QUERY_THREADS; i++) {
+        free(results[i]->sums);
+        free(results[i]);
     }
-    fflush(stdout);
+}
 
     // Destroy the mutex
     pthread_mutex_destroy(&mtx);
-
-    // Free the memory allocated for the exec_result structures
-  for (int i = 0; i < num_queries; i++) {
-    free(results[i]->sums);
-    free(results[i]);
-  }
 
     return;
 }

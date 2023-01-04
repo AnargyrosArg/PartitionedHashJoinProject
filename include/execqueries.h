@@ -8,6 +8,8 @@
 #include "join.h"
 #include "jobscheduler.h"
 
+#define MAX_QUERY_THREADS 2
+
 //we need this struct for the thread function
 typedef struct {
   QueryInfo* query;
