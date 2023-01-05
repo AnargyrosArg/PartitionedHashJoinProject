@@ -68,6 +68,20 @@ int pseudo_log2(int val){
     return count;
 }
 
+int factorial(int x) {
+    if (x < 0) return -1;
+    int fact = 1;
+    for (int i=1; i<=x; i++)
+        fact *= i;
+    return fact;
+}
+
+int in(int* arr, size_t size, int x) {
+    for (int i=0; i<size; i++)
+        if (arr[i] == x) return 1;
+    return 0;
+}
+
 void init_relation(relation* rel,int num_tuples){
     rel->tuples = malloc(num_tuples * sizeof(tuple));
     rel->num_tuples = num_tuples;
@@ -128,4 +142,47 @@ int* insert_array(int* array, int* pos, int* size, int data) {
         free(array);
         return new_array;
     }
+}
+
+// strings all ints of an array into one int
+uint array_to_int(int* array, size_t size) {
+    if (size < 1) return 0;
+    uint x = (uint) array[0];
+
+    for (int i=1; i<size; i++)
+        x = concat_uints(x, (uint) array[i]);
+    return x;
+}
+
+// concatenates two uints (2,3 = 23)
+uint concat_uints(uint x, uint y) {
+    uint pow = 10;
+    while(y >= pow) pow *= 10;
+    return x*pow + y;
+}
+
+// calculate all possible combinations of r elements in an array
+int combinations(int arr[], int size, int r, int** ret) {
+    int data[r]; // temp array to store all combinations one by one
+    return combinations_util(arr, data, 0, size-1, 0, r, ret, 0);
+}
+
+// recursive function to calculate all possible combinations of r elements in an array
+int combinations_util(int arr[], int data[], int start, int end, int index, int r, int** ret, int count) {
+    // Current combination is ready
+    if (index == r) {
+        for (int j=0; j<r; j++)
+            ret[count][j] = data[j];
+        return ++count;
+    }
+ 
+    // replace index with all possible elements. The condition
+    // "end-i+1 >= r-index" makes sure that including one element
+    // at index will make a combination with remaining elements
+    // at remaining positions
+    for (int i=start; i<=end && end-i+1 >= r-index; i++) {
+        data[index] = arr[i];
+        count = combinations_util(arr, data, i+1, end, index+1, r, ret, count);
+    }
+    return count;
 }

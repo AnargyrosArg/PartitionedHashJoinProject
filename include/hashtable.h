@@ -4,6 +4,9 @@
 
 #include "relations.h"
 
+#ifndef HASHTABLE_H
+#define HASHTABLE_H
+
 unsigned int hash2(unsigned int x, unsigned int max);
 unsigned int hash_simple(unsigned int x, unsigned int max);
 
@@ -44,3 +47,5 @@ int* search_hashtable(hashtable* table, int key, int* ret_size); // returns all 
 
 // doubles size of table, places everything again, and re-inserts value that caused rehash
 void rehash_hashtable(hashtable **ht, int cause_key, int cause_data);
+
+#endif
