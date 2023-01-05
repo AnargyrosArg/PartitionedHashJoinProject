@@ -4,6 +4,8 @@ Source file containing logic for the partitioning the relations
 */
 
 void* histogram_job(void* args);
+void* order_job(void* a);
+partition_result order_relation(relation rel,int histogram_size,int depth,int* histogram,jobscheduler*);
 
 //print histogram for debug purposes
 void print_histogram(int* histogram,int size){
@@ -58,12 +60,12 @@ void repartition(relation* rel,int** histogram,int *depth,int* histogram_size,lo
     pthread_cond_init(&histogram_cond,NULL);
     int completed = 0;
 
-    for(int i=0;i<N_WORKERS;i++){
+    for(int i=0;i<MAX_HISTOGRAM_JOBS;i++){
         histogram_job_args* args = malloc(sizeof(histogram_job_args));
         args->histogram_size = *histogram_size;
-        args->start = i * (rel->num_tuples / N_WORKERS);
-        args->stop = (i+1) * (rel->num_tuples / N_WORKERS);
-        if(i == N_WORKERS-1){
+        args->start = i * (rel->num_tuples / MAX_HISTOGRAM_JOBS);
+        args->stop = (i+1) * (rel->num_tuples / MAX_HISTOGRAM_JOBS);
+        if(i == MAX_HISTOGRAM_JOBS-1){
             args->stop = rel->num_tuples;
         }
         if(args->start-args->stop == 0){
@@ -83,7 +85,7 @@ void repartition(relation* rel,int** histogram,int *depth,int* histogram_size,lo
 
     pthread_mutex_lock(&histogram_mutex);
     //while there are jobs being executed , wait
-    while(completed < N_WORKERS){
+    while(completed < MAX_HISTOGRAM_JOBS){
         pthread_cond_wait(&histogram_cond,&histogram_mutex);
     }
 
@@ -125,30 +127,7 @@ partition_result partition_relation_internal(relation rel,int depth,jobscheduler
     
     repartition(&rel,&histogram,&depth,&histogram_size,L2_SIZE_BYTES,MAX_PASSES,scheduler);
     
-    int *prefix_sum = malloc(histogram_size * sizeof(int));
-    int sum=0;
-    //calculate prefix sums for each bucket
-    for(int i=0;i<histogram_size;i++){
-        prefix_sum[i]=sum;
-        sum += histogram[i];       
-    }
-
-    //allocate room for ordered relation
-    relation ordered_rel;
-    init_relation(&ordered_rel,rel.num_tuples);
-
-    //a table to keep the last index of each bucket that an element was inserted in
-    int offsets[histogram_size];
-    init_array(offsets,histogram_size,0);
-    for(int i=0;i<rel.num_tuples;i++){
-        int bucket = hash1(rel.tuples[i].payload,depth);
-        ordered_rel.tuples[prefix_sum[bucket] + offsets[bucket]]= rel.tuples[i];
-        offsets[bucket]++;
-    }
-    
     partition_result result;
-    result.ordered_rel = ordered_rel;
-    result.prefix_sum=prefix_sum;
     result.partition_sizes = histogram;
     result.histogram_size = histogram_size;
     result.depth= depth;
@@ -171,11 +150,82 @@ partition_info partition_relations(relation relA , relation relB, int depth , jo
         result1 = partition_relation_internal(relA,result2.depth , scheduler);
     }
 
+    result1 = order_relation(relA,result1.histogram_size,result1.depth,result1.partition_sizes,scheduler);
+    result2 = order_relation(relB,result2.histogram_size,result2.depth,result2.partition_sizes,scheduler);
     result.relA_info = result1;
     result.relB_info = result2;
     return result;
 }
 
+
+partition_result order_relation(relation rel,int histogram_size,int depth,int* histogram,jobscheduler* scheduler){
+    int *prefix_sum = malloc(histogram_size * sizeof(int));
+    int sum=0;
+    //calculate prefix sums for each bucket
+    for(int i=0;i<histogram_size;i++){
+        prefix_sum[i]=sum;
+        sum += histogram[i];       
+    }
+
+    //allocate room for ordered relation
+    relation ordered_rel;
+    init_relation(&ordered_rel,rel.num_tuples);
+
+    //a table to keep the last index of each bucket that an element was inserted in
+    int offsets[histogram_size];
+    for(int i=0;i<histogram_size;i++){
+        offsets[i]=0;
+    }
+    //cannot efficiently parallelize this part because of data dependencies!
+    // int completed =0;
+    // pthread_mutex_t order_mutex;
+    // pthread_mutex_init(&order_mutex,NULL);
+    // pthread_cond_t order_cond;
+    // pthread_cond_init(&order_cond,NULL);
+    // for(int i=0;i<MAX_ORDER_JOBS;i++){
+    //     order_job_args* args = malloc(sizeof(order_job_args));
+    //     args->depth = depth;
+    //     args->ordered_rel = ordered_rel;
+    //     args->prefix_sum = prefix_sum;
+    //     args->start = i * (rel.num_tuples / MAX_ORDER_JOBS);
+    //     args->stop = (i+1) * (rel.num_tuples / MAX_ORDER_JOBS);
+    //     if(i == MAX_ORDER_JOBS-1){
+    //         args->stop = rel.num_tuples;
+    //     }
+    //     if(args->start-args->stop == 0){
+    //         free(args);
+    //         completed++;
+    //         continue;
+    //     }
+    //     args->offsets = offsets;
+    //     args->rel = rel;
+    //     args->completed = &completed;
+    //     args->order_mutex = &order_mutex;
+    //     args->order_cond= &order_cond;
+    //     job j = {ORDER_JOB,order_job,(void*)args};
+    //     schedule_job(scheduler,j);
+    // }
+    // pthread_mutex_lock(&order_mutex);
+    // //while there are jobs being executed , wait
+    // while(completed < MAX_ORDER_JOBS){
+    //     pthread_cond_wait(&order_cond,&order_mutex);
+    // }
+    // pthread_mutex_destroy(&order_mutex);
+    // pthread_cond_destroy(&order_cond);
+    for(int i=0;i<rel.num_tuples;i++){
+        int bucket = hash1(rel.tuples[i].payload,depth);
+        ordered_rel.tuples[prefix_sum[bucket] + offsets[bucket]]= rel.tuples[i];
+        offsets[bucket]++;
+    }
+
+    partition_result result;
+    result.depth = depth;
+    result.histogram_size= histogram_size;
+    result.partition_sizes = histogram;
+    result.ordered_rel = ordered_rel;
+    result.prefix_sum=prefix_sum;
+    return result;
+}
 
 
 void* histogram_job(void* a){
@@ -184,8 +234,7 @@ void* histogram_job(void* a){
     int stop = args->stop;
     int depth = args->depth;
     relation* rel = args->rel;
-    int histogram_size = args->histogram_size;    
-    
+    int histogram_size = args->histogram_size;
 
    // fprintf(stderr,"start = %d , stop = %d/%d \n",start,stop,rel->num_tuples);
     int temp_histogram[histogram_size];
@@ -204,3 +253,29 @@ void* histogram_job(void* a){
     free(args);
     return NULL;
 } 
+
+
+void* order_job(void* a){
+    order_job_args* args = (order_job_args*) a;
+    int start = args->start;
+    int stop = args->stop;
+    int* prefix_sum = args->prefix_sum;
+    int* offsets = args->offsets;
+    int depth = args->depth;
+    relation ordered_rel = args->ordered_rel;
+    relation rel = args->rel;
+    // fprintf(stderr,"start %d stop %d/%d\n",start,stop,rel.num_tuples);
+    for(int i=start;i<stop;i++){
+        int bucket = hash1(rel.tuples[i].payload,depth);
+        pthread_mutex_lock(args->order_mutex);
+        ordered_rel.tuples[prefix_sum[bucket] + offsets[bucket]]= rel.tuples[i];
+        offsets[bucket]++;
+        pthread_mutex_unlock(args->order_mutex);
+    }
+    pthread_mutex_lock(args->order_mutex);
+    *(args->completed) = *(args->completed)+1;
+    pthread_mutex_unlock(args->order_mutex);
+    pthread_cond_broadcast(args->order_cond);
+    free(args);
+    return NULL;
+}
