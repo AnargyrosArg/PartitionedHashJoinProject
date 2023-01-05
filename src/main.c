@@ -43,7 +43,6 @@ int main(int argc, char** argv) {
         tables[n_tables++]=load_relation(line);
     }
 
-    int current = 0;
     //parse batch of queries
     while ((n_read=getline(&line,&line_max_size,stdin))>0) {
         //remove newline and carriage return for the last 2 chars
@@ -79,7 +78,6 @@ int main(int argc, char** argv) {
     //free queries mem
     free(queries);
 
-    //TODO free and destroy scheduler
     delete_scheduler(scheduler);
     free(scheduler);
     return 0;

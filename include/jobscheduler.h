@@ -10,7 +10,7 @@
 #define N_WORKERS 4
 
 //enum to determine what kind of job the scheduler just pulled out of the queue
-enum JobType {JOIN_JOB};
+enum JobType {JOIN_JOB , HISTOGRAM_JOB};
 
 typedef struct jobscheduler jobscheduler;
 typedef struct job job;

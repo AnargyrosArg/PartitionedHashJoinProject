@@ -1,13 +1,13 @@
 #include "join.h"
 
-Intermediate* join_intermediates(Intermediate* inter1,Intermediate* inter2,QueryInfo* query,int rel1,int col1,int rel2,int col2,table* tabl){
+Intermediate* join_intermediates(Intermediate* inter1,Intermediate* inter2,QueryInfo* query,int rel1,int col1,int rel2,int col2,table* tabl,jobscheduler* scheduler){
     relation r = intermediate_to_relation(inter1,rel1,col1,tabl,query);
     relation s = intermediate_to_relation(inter2,rel2,col2,tabl,query);
     result ret;
     init_result(&ret);
     
     //first we create partitions for relationship r,s
-    partition_info info = partition_relations(r, s , 2);
+    partition_info info = partition_relations(r, s , 2,scheduler);
     partition_result partition_info = info.relA_info;
     partition_result partition_info2 = info.relB_info;
 
@@ -98,6 +98,7 @@ Intermediate* join_intermediates(Intermediate* inter1,Intermediate* inter2,Query
             if(inter2->valid_rels[k] && inter1->valid_rels[k]){
                 //this should never happen , if both relations are valid at an intermediate a selfjoin should have been used instead
                 fprintf(stderr,"Stinky situation!\n");
+                exit(-1);
             }
         }
     }
@@ -108,27 +109,14 @@ Intermediate* join_intermediates(Intermediate* inter1,Intermediate* inter2,Query
     return final;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 //parallel join_intermediates replacement
 Intermediate* parallel_join(Intermediate* inter1,Intermediate* inter2,QueryInfo* query,int rel1,int col1,int rel2,int col2,table* tabl,jobscheduler* scheduler){
+    
     relation r = intermediate_to_relation(inter1,rel1,col1,tabl,query);
     relation s = intermediate_to_relation(inter2,rel2,col2,tabl,query);
     
-    
     //first we create partitions for relationship r,s
-    partition_info info = partition_relations(r, s , 2);
+    partition_info info = partition_relations(r, s , 2 , scheduler);
     partition_result partition_info = info.relA_info;
     partition_result partition_info2 = info.relB_info;
     //fprintf(stderr,"%d - %d\n",partition_info2.histogram_size,partition_info.histogram_size);
@@ -314,12 +302,12 @@ void* joinjob(void* p){
 
 
 
-result joinfunction(relation r, relation s){
+result joinfunction(relation r, relation s,jobscheduler* scheduler){
     result ret;
     init_result(&ret);
 
     //first we create partitions for relationship r,s
-    partition_info info = partition_relations(r, s , 2);
+    partition_info info = partition_relations(r, s , 2,scheduler);
     partition_result partition_info = info.relA_info;
     partition_result partition_info2 = info.relB_info;
 

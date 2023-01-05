@@ -12,6 +12,8 @@ void partition_test(void){
     
     init_relation(&relA , test_size);
     init_relation(&relB, test_size);
+    jobscheduler* scheduler = malloc(sizeof(jobscheduler));
+    init_scheduler(scheduler);
 
     for(int i=0;i<test_size;i++){
         relA.tuples[i].payload = i;
@@ -20,7 +22,7 @@ void partition_test(void){
         relB.tuples[i].key = i;
         relB.tuples[i].payload = i%4;
     }
-    partition_info info = partition_relations(relA, relB,2);
+    partition_info info = partition_relations(relA, relB,2,scheduler);
 
     TEST_ASSERT(info.relA_info.histogram_size == info.relB_info.histogram_size);
     TEST_ASSERT(info.relA_info.depth == info.relB_info.depth);
@@ -39,6 +41,8 @@ void partition_test(void){
     delete_part_info(info);
     delete_relation(info.relA_info.ordered_rel);
     delete_relation(info.relB_info.ordered_rel);
+    delete_scheduler(scheduler);
+    free(scheduler);
 
 }
 

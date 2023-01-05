@@ -33,7 +33,8 @@
         "parser.h": "c",
         "intemediates.h": "c",
         "filter.h": "c",
-        "thread": "c"
+        "thread": "c",
+        "jobscheduler.h": "c"
     },
     "makefile.launchConfigurations": [
         {
