@@ -72,7 +72,8 @@ query_stats* update_query_stats_filter(table* tables, query_stats* stat, QueryIn
 // QueryInfo* query:    takes query as input instead of join, because query is an argument needed for update_query_stats_filter
 //                      refer to update_query_stats_filter above to see why it takes in a query instead of a filter
 // uint join_index:     the index of the query's join to evaluate (index of 1 will evaluate query's 2nd join)
-query_stats* update_query_stats_join(table* tables, query_stats* stat, QueryInfo* query, uint join_index) {
+// uint64_t* cost:      the cost of the join will be stored in this variable
+query_stats* update_query_stats_join(table* tables, query_stats* stat, QueryInfo* query, uint join_index, uint64_t* cost) {
     // find correct join
     JoinInfo* info = query->joins;
     uint current_index = 0;
@@ -89,6 +90,7 @@ query_stats* update_query_stats_join(table* tables, query_stats* stat, QueryInfo
 
     int rel1 = info->left.rel_id; int rel2 = info->right.rel_id;
     int col1 = info->left.col_id; int col2 = info->right.col_id;
+    int tmp;
     stats* current;
 
     // self join
@@ -96,16 +98,16 @@ query_stats* update_query_stats_join(table* tables, query_stats* stat, QueryInfo
         // affected columns
         stats* current1 = &(stat->statistics[rel1][col1]);
         stats* current2 = &(stat->statistics[rel2][col2]);
-        int tmp = (int) round(((double)(current1->count * current1->count)) / ((double)(current1->upper - current1->lower + 1)));
+        tmp = (int) round(((double)(current1->count * current1->count)) / ((double)(current1->upper - current1->lower + 1)));
         update_stats(current1, current1->lower, current1->upper, tmp, current1->distinct);
         update_stats(current2, current1->lower, current1->upper, tmp, current1->distinct);
 
         // other columns
         for (int i=0; i<stat->cols_per_rel[rel1]; i++) {
             current = &(stat->statistics[rel1][i]);
-            if (i != col1) update_stats(current, current->lower, current->upper, current1->count, current->distinct);
+            if (i != col1) update_stats(current, current->lower, current->upper, tmp, current->distinct);
             current = &(stat->statistics[rel2][i]);
-            if (i != col2) update_stats(current, current->lower, current->upper, current1->count, current->distinct);
+            if (i != col2) update_stats(current, current->lower, current->upper, tmp, current->distinct);
         }
     }
     // join between same relation, not same column (R.A = R.B)
@@ -118,7 +120,7 @@ query_stats* update_query_stats_join(table* tables, query_stats* stat, QueryInfo
         int new_upper = min(current1->upper, current2->upper);
 
         int start_count = current1->count;
-        int tmp = (int) round(((double)(start_count)) / ((double)(new_upper - new_lower + 1)));
+        tmp = (int) round(((double)(start_count)) / ((double)(new_upper - new_lower + 1)));
 
         double base = 1.0 - ((double) (((double) tmp) / ((double) start_count)));
         if (start_count == 0) base = 1.0; // careful for division with 0
@@ -197,7 +199,7 @@ query_stats* update_query_stats_join(table* tables, query_stats* stat, QueryInfo
         }
         // affected columns
         int start_distinct1 = current1->distinct, start_distinct2 = current2->distinct;
-        int tmp = (int) round(((double)(current1->count * current2->count)) / ((double)(current1->upper - current1->lower + 1)));
+        tmp = (int) round(((double)(current1->count * current2->count)) / ((double)(current1->upper - current1->lower + 1)));
         int tmp2 = (int) round((double)(start_distinct1 * start_distinct2) / ((double)(current1->upper - current1->lower + 1)));
         update_stats(current1, current1->lower, current1->upper, tmp, tmp2);
         update_stats(current2, current1->lower, current1->upper, tmp, tmp2);
@@ -241,6 +243,9 @@ query_stats* update_query_stats_join(table* tables, query_stats* stat, QueryInfo
         // update connections
         connect(stat, rel1, rel2);
     }
+
+    // return
+    *cost = tmp;
     return stat;
 }
 
