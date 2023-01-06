@@ -16,6 +16,18 @@ int number_of_digits(int num){
     return 10;
 }
 
+// returns number of joins in query
+size_t get_join_count(QueryInfo* query) {
+    JoinInfo* current_join = query->joins;
+    size_t count = 0;
+
+    while(current_join != NULL) {
+        current_join = current_join->next;
+        count++;
+    }
+    return count;
+}
+
 void print_query_info(QueryInfo qinfo){
     printf("===== Involved Relations =====\n");
     for(int i=0;i<qinfo.num_rels;i++){
