@@ -5,7 +5,7 @@
 #include "relations.h"
 #include "utils.h"
 #include "execqueries.h"
-#include "stats.h"
+#include "optimizer.h"
 
 #define MAX_LINE_SIZE 100
 #define MAX_N_TABLES 25
@@ -19,6 +19,12 @@ int main(int argc, char** argv) {
     //array with info for input queries
     QueryInfo* queries;
     size_t n_queries=0;
+
+    // set to true (non-zero) to enable optimizer
+    // WARNING: optimizer does not work for a certain type of query
+    // the problematic queries of small.work are listed in optimizer.c, and have been removed from test_input.txt
+    // ./runTestharness DOES NOT WORK with optimizer, unless you change small.work and small.result
+    int optimize = 0;
 
     //allocate table array
     tables = malloc(MAX_N_TABLES * sizeof(table));
@@ -49,7 +55,19 @@ int main(int argc, char** argv) {
                 line[strlen(line)-1] = 0;
         if (strcmp(line,"F")==0) continue; // End of a batch
         parse_query(line,&(queries[n_queries++]));
-        exec_query(&queries[current++],tables);
+
+        if (optimize) {
+            int optimal[get_join_count(&queries[current])]; // stores optimal join sequence
+            optimize_query(tables, &queries[current], optimal);
+
+            // printf("current query is %d\n", current);
+            // for (int i=0; i<get_join_count(&queries[current]); i++)
+            //     printf("%d ", optimal[i]);
+            // printf("\n");
+
+            exec_query(&queries[current++],tables, optimal);
+        } else 
+            exec_query(&queries[current++],tables, NULL);
     }
     free(line);
 

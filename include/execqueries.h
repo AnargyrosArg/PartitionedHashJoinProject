@@ -9,5 +9,5 @@
 
 
 void printsum(int , int , Intermediates* ,table *,int );
-void exec_query(QueryInfo*, table*);
+void exec_query(QueryInfo*, table*, int* sequence);
 void exec_all_queries(QueryInfo*, table*, uint);

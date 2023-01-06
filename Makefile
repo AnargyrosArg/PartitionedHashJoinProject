@@ -3,7 +3,7 @@ TEST_DIR = ./tests
 SRC_DIR = ./src
 INCL_DIR = ./include 
 GCC_FLAGS = -I$(INCL_DIR) -Wall -O2
-SOURCE_FILES = main.c hash1.c partition.c utils.c hashtable.c join.c relations.c parser.c intermediates.c filter.c execqueries.c stats.c
+SOURCE_FILES = main.c hash1.c partition.c utils.c hashtable.c join.c relations.c parser.c intermediates.c filter.c execqueries.c stats.c optimizer.c sort.c
 HARNESS_SRC = harness.cpp
 OBJ_FILES = $(addprefix $(BUILD_DIR)/,$(SOURCE_FILES:.c=.o))
 

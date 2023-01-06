@@ -62,17 +62,12 @@ Intermediate* selfjoin(int rel1,int rel2,uint col1,uint col2,Intermediate* inter
         return res;
 }
 
-void exec_query(QueryInfo *query, table* tabl){
+// sequence: optimal join execution order
+void exec_query(QueryInfo *query, table* tabl, int* sequence) {
     FilterInfo* current_filter = query->filters;
     JoinInfo* current_join = query->joins;
     SelectionInfo* current_proj = query->projections;
-    // debug tools
-    int join_counter = 0;
-
-    // statistics
-    // printf("initial stats:\n"); fflush(stdout);
-    query_stats* stat = init_query_stats(query, tabl);
-    // print_query_stats(stat);
+    int join_counter = 0, found = 0;
 
     //we create the intermediate struct that we will use to store the results
     Intermediates* intermediates = init_intermediates();
@@ -98,25 +93,31 @@ void exec_query(QueryInfo *query, table* tabl){
         current_filter = current_filter->next;
     }
 
-    // filter statistics
-    // printf("stats after filters:\n"); fflush(stdout);
-    stat = update_query_stats_filter(tabl, stat, query);
-    // print_query_stats(stat);
+    // now we continue with the joins
+    for (int i=0; i<get_join_count(query); i++) {
+        current_join = query->joins;
+        join_counter = 0; found = 0;
 
-    // printf("intermediates after filters:\n"); fflush(stdout);
-    // print_intermediates(intermediates, 0);
+        // if we have sequence, follow that, otherwise, execute joins in default order
+        while(current_join != NULL) {
+            if ((sequence != NULL && join_counter == sequence[i]) || (sequence == NULL && join_counter == i)) {
+                found = 1;
+                break;
+            }
+            current_join = current_join->next;
+            join_counter++;
+        }
+        if (!found) fprintf(stderr, "exec_query: could not find next join\n");
+        // printf("executing join %d\n", join_counter);
 
-    //now we continue with the joins
-    //we pass all the join list till the end
-    while(current_join !=NULL){
+        // execute found join
         int rel1 = current_join->left.rel_id;
         int rel2 = current_join->right.rel_id;
         int col1 = current_join->left.col_id;
         int col2 = current_join->right.col_id;
         int actualid1 = query->rel_ids[rel1];
         int actualid2 = query->rel_ids[rel2];
-
-     
+    
         //now we create the relations that will be joined
         //first we check if they exist in the intermediates
         Intermediate* inter1;
@@ -137,31 +138,8 @@ void exec_query(QueryInfo *query, table* tabl){
             remove_intermediate(inter2,intermediates);
             insert_intermediate(joinres,intermediates);
             //free(joinres);
-       }
-
-        // join statistics
-        printf("stats after join %d:\n", join_counter); fflush(stdout);
-        stat = update_query_stats_join(tabl, stat, query, join_counter);
-        print_query_stats(stat);
-
-        printf("intermediates after %d join:\n", join_counter); fflush(stdout);
-        print_intermediates(intermediates, 0);
-
-
-        //we coninue to the next join
-        current_join = current_join->next;
-        join_counter++;
-
-        
+        }
     }
-
-    // final statistics/intermediates comparisson
-    // printf("final stats:\n");
-    // print_query_stats(stat);
-    // printf("final intermediates:\n");
-    // print_intermediates(intermediates, 0);
-    // printf("========================================\n");
-    // fflush(stdout);
 
     //now that we finished with the joins and the filter all we have to do is do the projections and print the sum
     //we pass all the projection list till the end
@@ -181,7 +159,6 @@ void exec_query(QueryInfo *query, table* tabl){
     printf("\n");
     fflush(stdout);
     delete_intermediates(intermediates);
-    delete_query_stats(&stat);
     return;
 }
 
@@ -189,7 +166,7 @@ void exec_query(QueryInfo *query, table* tabl){
 void exec_all_queries(QueryInfo *queries,table *tabl,uint num_queries){
 
     for (int i=0;i<num_queries;i++){
-        exec_query(&queries[i],tabl);
+        exec_query(&queries[i],tabl, NULL);
     }
     return;
 }

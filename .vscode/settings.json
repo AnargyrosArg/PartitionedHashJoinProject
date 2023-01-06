@@ -33,7 +33,9 @@
         "parser.h": "c",
         "intemediates.h": "c",
         "filter.h": "c",
-        "thread": "c"
+        "thread": "c",
+        "sort.h": "c",
+        "stats.h": "c"
     },
     "makefile.launchConfigurations": [
         {
