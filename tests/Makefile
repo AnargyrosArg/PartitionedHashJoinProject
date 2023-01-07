@@ -28,7 +28,7 @@ intermediates_tests: intermediates_tests.c
 	gcc $(GCC_FLAGS) intermediates_tests.c $(BUILD_DIR)/intermediates.o $(BUILD_DIR)/utils.o $(BUILD_DIR)/join.o $(BUILD_DIR)/hashtable.o $(BUILD_DIR)/relations.o $(BUILD_DIR)/hash1.o $(BUILD_DIR)/partition.o -o intermediates_tests
 
 filter_tests: filter_tests.c
-	gcc $(GCC_FLAGS) filter_tests.c $(BUILD_DIR)/filter.o $(BUILD_DIR)/utils.o $(BUILD_DIR)/intermediates.o -o filter_tests
+	gcc $(GCC_FLAGS) filter_tests.c  $(BUILD_DIR)/jobscheduler.o $(BUILD_DIR)/filter.o $(BUILD_DIR)/utils.o $(BUILD_DIR)/intermediates.o -o filter_tests
 
 partition_tests: partition_tests.c
 	gcc $(GCC_FLAGS) $@.c $(BUILD_DIR)/$(@:_tests=.o) $(BUILD_DIR)/utils.o $(BUILD_DIR)/hash1.o  $(BUILD_DIR)/jobscheduler.o -o $@
