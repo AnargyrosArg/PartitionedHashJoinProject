@@ -308,7 +308,7 @@ void print_query_stats(query_stats* stat) {
         printf("====== table %d statistics: ======\nlower\tupper\tcount\tdistinct\n", i);
         for (int j=0; j<stat->cols_per_rel[i]; j++) {
             stats tmp = stat->statistics[i][j];
-            printf("%d\t%d\t%u\t%u\n", tmp.lower, tmp.upper, tmp.count, tmp.distinct);
+            printf("%ld\t%ld\t%lu\t%lu\n", tmp.lower, tmp.upper, tmp.count, tmp.distinct);
         }
         for (int j=0; j<stat->num_query_rels; j++)
             printf("%d ", stat->connections[i][j]);

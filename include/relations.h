@@ -11,6 +11,7 @@
 
 #define INITIAL_RESULT_CAPACITY 500000
 #define RESULT_CAPACITY_INCREMENT 50000
+#define MAX_DISTINCT_SIZE 5000000
 
 
 typedef struct tuple tuple;
@@ -51,10 +52,10 @@ struct result{
 };
 
 struct stats {
-    int lower;
-    int upper;
-    uint count;
-    uint distinct;
+    int64_t lower;
+    int64_t upper;
+    uint64_t count;
+    uint64_t distinct;
 };
 
 // statistics for each column of each relation in a query
@@ -79,6 +80,6 @@ void init_result(result* res);
 void add_result(result* res, pair p);
 void delete_result(result* res);
 
-table load_relation(const char* filename);
+table load_relation(const char* filename, int optimize); // if optimize is non-zero, stats for each column will be calculated on load
 void delete_table(table*);
 void print_table(table, int only_stats);

@@ -21,6 +21,7 @@ int main(int argc, char** argv) {
     size_t n_queries=0;
 
     // set to true (non-zero) to enable optimizer
+    // WARNING: not yet actually functional (only thing it does is calculate initial stats)
     int optimize = 0;
 
     //allocate table array
@@ -44,7 +45,7 @@ int main(int argc, char** argv) {
                 line[strlen(line)-1] = 0;
         if (strcmp(line,"Done")==0) break;
         //store table
-        tables[n_tables++]=load_relation(line);
+        tables[n_tables++]=load_relation(line, optimize);
     }
 
     //parse batch of queries

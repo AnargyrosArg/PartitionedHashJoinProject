@@ -57,7 +57,8 @@ void add_result(result* res,pair p){
 // }
 
 
-table load_relation(const char* filename){
+// optimize: if non-zero, stats for each column will be calculated
+table load_relation(const char* filename, int optimize){
     FILE* fp = fopen(filename, "r");
     if (fp==NULL) {
         perror("fopen");
@@ -90,34 +91,42 @@ table load_relation(const char* filename){
 
     ret.statistics = malloc(ret.num_colums * sizeof(stats));
     ret.table = malloc(ret.num_colums * sizeof(uint64_t*));
-    
+
     for (unsigned i=0; i<ret.num_colums; ++i) {
-        uint lowest = UINT_MAX, highest = 0;
+        uint64_t lowest = ULONG_MAX, highest = 0;
 
         ret.table[i] = (uint64_t*)(addr); 
         addr += ret.num_tuples * sizeof(uint64_t);
 
         // statistics
-        ret.statistics[i].count = ret.num_tuples;
-        for (int j=0; j<ret.num_tuples; j++) {
-            if (ret.table[i][j] < lowest)  lowest = ret.table[i][j];
-            if (ret.table[i][j] > highest) highest = ret.table[i][j];
+        ret.statistics[i].count = 0;
+        ret.statistics[i].lower = 0;
+        ret.statistics[i].upper = 0;
+        ret.statistics[i].distinct = 0;
+
+        // dont calculate stats if we dont use optimizer
+        if (optimize) {
+            ret.statistics[i].count = ret.num_tuples;
+            for (int j=0; j<ret.num_tuples; j++) {
+                if (ret.table[i][j] < lowest)  lowest = ret.table[i][j];
+                if (ret.table[i][j] > highest) highest = ret.table[i][j];
+            }
+            ret.statistics[i].lower = lowest;
+            ret.statistics[i].upper = highest;
+            
+            // distinct calculation
+            uint64_t N = MAX_DISTINCT_SIZE, size = highest-lowest+1, distinct_count = 0;
+            size_t distinct_size = (size > N) ? N : size;
+            char distinct_table[distinct_size];
+            memset(distinct_table, 0, distinct_size);
+
+            for (int j=0; j<ret.num_tuples; j++)
+                distinct_table[(ret.table[i][j] - lowest) % distinct_size] = 1;
+            for (int j=0; j<distinct_size; j++)
+                distinct_count += distinct_table[j];
+            ret.statistics[i].distinct = 0;
         }
-        ret.statistics[i].lower = lowest;
-        ret.statistics[i].upper = highest;
-        
-        uint N = 50000000, size = highest-lowest+1, distinct_count = 0;
-        size_t distinct_size = (size > N) ? N : size;
-        char distinct_table[distinct_size];
-        memset(distinct_table, 0, distinct_size);
-
-        for (int j=0; j<ret.num_tuples; j++)
-            distinct_table[(ret.table[i][j] - lowest) % distinct_size] = 1;
-        for (int j=0; j<distinct_size; j++)
-            distinct_count += distinct_table[j];
-        ret.statistics[i].distinct = distinct_count;
     }
-
 
     fclose(fp);
     return ret;
@@ -143,7 +152,7 @@ void print_table(table t, int only_stats) {
     printf("====== statistics: ======\nlower\tupper\tcount\tdistinct\n");
     for (int i=0; i<t.num_colums; i++) {
         stats stat = t.statistics[i];
-        printf("%d\t%d\t%u\t%u\n", stat.lower, stat.upper, stat.count, stat.distinct);
+        printf("%ld\t%ld\t%lu\t%lu\n", stat.lower, stat.upper, stat.count, stat.distinct);
     }
     printf("\n");
 }

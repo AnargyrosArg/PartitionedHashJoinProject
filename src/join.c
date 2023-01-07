@@ -254,7 +254,7 @@ void* joinjob(void* p){
     //now we have to create hashtable for the i-th partition of r
     //size of neighbour starts at 8
     int H = 8;
-    hashtable *tableR = init_hashtable(bucketsizeA,H);
+    hashtable *tableR = init_hashtable(bucketsizeA,H, hash2);
     //print_hashtable(tableR);
     //now that we created our hashtable we want to insert every tuple of the partition into the hashtable 
     
