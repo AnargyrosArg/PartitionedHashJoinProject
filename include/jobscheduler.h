@@ -8,10 +8,10 @@
 #include <stdatomic.h>
 
 #define MAX_QUEUE_SIZE 4096
-#define N_WORKERS 4
+#define N_WORKERS 6
 
 //enum to determine what kind of job the scheduler just pulled out of the queue
-enum JobType {JOIN_JOB , HISTOGRAM_JOB , ORDER_JOB};
+enum JobType {JOIN_JOB , HISTOGRAM_JOB , ORDER_JOB , FILTER_JOB};
 
 typedef struct jobscheduler jobscheduler;
 typedef struct job job;

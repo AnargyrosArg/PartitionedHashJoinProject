@@ -8,7 +8,7 @@
 #include "join.h"
 #include "jobscheduler.h"
 
-#define MAX_QUERY_THREADS 2
+#define MAX_QUERY_THREADS 6
 
 //we need this struct for the thread function
 typedef struct {

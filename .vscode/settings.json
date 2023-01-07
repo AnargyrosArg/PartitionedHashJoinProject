@@ -34,7 +34,8 @@
         "intemediates.h": "c",
         "filter.h": "c",
         "thread": "c",
-        "jobscheduler.h": "c"
+        "jobscheduler.h": "c",
+        "pthread.h": "c"
     },
     "makefile.launchConfigurations": [
         {

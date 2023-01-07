@@ -8,8 +8,8 @@
 #include "jobscheduler.h"
 
 #define MAX_PASSES 10
-#define MAX_ORDER_JOBS 4
-#define MAX_HISTOGRAM_JOBS 4
+#define MAX_ORDER_JOBS 6
+#define MAX_HISTOGRAM_JOBS 6
 
 typedef struct partition_result partition_result;
 
