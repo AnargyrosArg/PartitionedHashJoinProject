@@ -1,8 +1,8 @@
 #include "execqueries.h" 
+#include "timer.h"
 
-
-//function that prints the sum of one projection
-void printsum(int rel, int column, Intermediates* inter, table *tabl,int actualid){
+//function that returns the sum of one projection
+uint64_t printsum(int rel, int column, Intermediates* inter, table *tabl,int actualid){
     uint64_t sum =0;
     //first we need to get the relation from the intermediates
     Intermediate* intermediate;
@@ -17,18 +17,17 @@ void printsum(int rel, int column, Intermediates* inter, table *tabl,int actuali
         // printf("(%d %lu) ",i,sum);
     }
 
-    //if the sum is equal to 0 then we print NULL
+    //if the sum is equal to 0 then we return 0
     if(sum == 0){
-        printf("NULL");
+        return 0;
 
     }
     else{
-        printf("%lu",sum);
+        return sum;
     }
-    return;
 }
 
-
+//TODO: move this to join.c
 Intermediate* selfjoin(int rel1,int rel2,uint col1,uint col2,Intermediate* inter,table* tabl,QueryInfo* query,Intermediates* intermediates){
         Intermediate* res = malloc(sizeof(Intermediate));
         //we have to get the actual realtion from the table, remember that the int rel is the id of the relation in the query, not the actual id of the relation in the table
@@ -62,8 +61,10 @@ Intermediate* selfjoin(int rel1,int rel2,uint col1,uint col2,Intermediate* inter
         return res;
 }
 
+//now returns the result of the join instead of printing it
 // sequence: optimal join execution order
-void exec_query(QueryInfo *query, table* tabl, int* sequence) {
+exec_result* exec_query(QueryInfo *query, table* tabl,jobscheduler* scheduler, int* sequence){
+    
     FilterInfo* current_filter = query->filters;
     JoinInfo* current_join = query->joins;
     SelectionInfo* current_proj = query->projections;
@@ -86,7 +87,7 @@ void exec_query(QueryInfo *query, table* tabl, int* sequence) {
         get_intermediates(intermediates,rel,actualid,&intermediate,tabl);
         
         Intermediate* filter_result;
-        filter_intermediate(intermediate,&filter_result,op,value,rel,col,tabl,actualid);
+        filter_intermediate(intermediate,&filter_result,op,value,rel,col,tabl,actualid,scheduler);
         remove_intermediate(intermediate,intermediates);
         insert_intermediate(filter_result,intermediates);
        // free(filter_result);
@@ -129,11 +130,16 @@ void exec_query(QueryInfo *query, table* tabl, int* sequence) {
             Intermediate* selfjoin_result= selfjoin(rel1,rel2,col1,col2,inter1,tabl,query,intermediates);
             remove_intermediate(inter1,intermediates);
             insert_intermediate(selfjoin_result,intermediates);
+
         }else{
             get_intermediates(intermediates,rel1,actualid1,&inter1,tabl);
             get_intermediates(intermediates,rel2,actualid2,&inter2,tabl);
             //execute join operation normally
-            Intermediate* joinres = join_intermediates(inter1,inter2,query,rel1,col1,rel2,col2,tabl);
+            //serialized execution
+            //Intermediate* joinres = join_intermediates(inter1,inter2,query,rel1,col1,rel2,col2,tabl);
+            //parallel execution
+            Intermediate* joinres = parallel_join(inter1,inter2,query,rel1,col1,rel2,col2,tabl,scheduler);
+            
             remove_intermediate(inter1,intermediates);
             remove_intermediate(inter2,intermediates);
             insert_intermediate(joinres,intermediates);
@@ -141,32 +147,150 @@ void exec_query(QueryInfo *query, table* tabl, int* sequence) {
         }
     }
 
-    //now that we finished with the joins and the filter all we have to do is do the projections and print the sum
+    //now that we finished with the joins and the filter all we have to do is do the projections and return the sum
     //we pass all the projection list till the end
+
+    //we firstly have to get the number of projections
+    int proj_counter = 0;
+    //we pass all the projection list till the end to count the number of projections
+    SelectionInfo* proj1 = query->projections;
+    while(proj1!=NULL){
+        proj_counter++;
+        proj1 = proj1->next;
+    }
+
+    //we create the result struct
+    exec_result* res = (exec_result*)malloc(sizeof(exec_result));
+    res->numofprojections = proj_counter;
+    res->sums = (uint64_t*)malloc(sizeof(uint64_t)*proj_counter);
+
+    //now we have to pass again the projection list to get the sum of each projection
+    int counter = 0;
     while(current_proj != NULL){
         int projrel = current_proj->rel_id;
         int projcol = current_proj->col_id;
         //we get the actual relation from the table
         int actualid = query->rel_ids[projrel];
+
         //now we just run the sum function for every projection
-        printsum(projrel, projcol, intermediates,&tabl[actualid],actualid);
-        if(current_proj->next!=NULL){
-            printf(" ");
-        }
+        uint64_t tempsum= printsum(projrel, projcol, intermediates,&tabl[actualid],actualid);
+        res->sums[counter] = tempsum;
+        counter++;
+
         //we move on to the next projection
         current_proj = current_proj->next;
     }
-    printf("\n");
-    fflush(stdout);
     delete_intermediates(intermediates);
-    return;
+
+    //free(scheduler);
+
+    return res;
 }
 
-//function that executes all the queries
-void exec_all_queries(QueryInfo *queries,table *tabl,uint num_queries){
+//we need it to make sure the threads take different queries
+int querycounter = 0;
+//we need a mutex
+pthread_mutex_t mtx;
 
-    for (int i=0;i<num_queries;i++){
-        exec_query(&queries[i],tabl, NULL);
+//function of a thread
+void *thread_function(void *args){
+    ThreadArgs* arg = (ThreadArgs*)args;
+
+    //we lock the mutex
+    pthread_mutex_lock(&mtx);
+    QueryInfo* query = &arg->query[querycounter];
+    int querynum = querycounter%MAX_QUERY_THREADS;
+    querycounter++;
+    //we unlock the mutex
+    pthread_mutex_unlock(&mtx);
+
+    table* tabl = arg->tabl;
+    jobscheduler* scheduler = arg->scheduler;
+
+    exec_result *res= exec_query(query,tabl,scheduler, NULL);
+    res->numofquery = querynum;
+
+
+    return res;
+}
+
+
+//function that executes all the queries
+void exec_all_queries(QueryInfo *queries,table *tabl,uint num_queries,jobscheduler* scheduler){
+
+    int n_threads;
+    if(MAX_QUERY_THREADS < num_queries){
+        n_threads = MAX_QUERY_THREADS;
+    }else{
+        n_threads = num_queries;
     }
+
+    //we create the threads
+    pthread_t threads[n_threads];
+    //array to store the result of each thread, we need it cause we want to print them in order
+    exec_result* results[n_threads];
+
+    //create the mutex
+    pthread_mutex_init(&mtx,NULL);
+
+    // Initialize the results array to NULL
+    for (int i = 0; i < n_threads; i++) {
+        results[i] = NULL;
+    }
+
+    //we have to reset the querycounter to 0
+    querycounter = 0;
+
+    while(querycounter < num_queries){        
+        //we create the threads
+        for (int i=0;i<n_threads;i++){
+            ThreadArgs args = { queries, tabl, scheduler };
+            pthread_create(&threads[i],NULL,thread_function,&args);
+        }
+        //we wait for the threads to finish and get the results of each one
+        int j=0;
+        for (j=0;j<n_threads;j++){
+            pthread_join(threads[j],(void**)&results[j]);
+        }
+        //now we have to print the results in order
+        int k;
+        for(k=0;k<n_threads;k++){
+            //first we find the res that holds the same num as the k
+            int m;
+            for( m=0;m<n_threads;m++){
+                if(results[m]->numofquery == k){
+                    break;
+                }
+            }
+
+            int l;
+            for(l=0;l<results[m]->numofprojections;l++){
+                if(results[m]->sums[l] == 0){
+                    printf("NULL");
+                }
+                else{
+                    printf("%lu",results[m]->sums[l]);
+                }
+
+                if(l!=results[m]->numofprojections-1){
+                    printf(" ");
+                }
+                if(l==results[m]->numofprojections-1){
+                    printf("\n");
+                }
+            }
+        }
+        fflush(stdout);
+
+        // Free the memory allocated for the exec_result structures
+    for (int i = 0; i < n_threads; i++) {
+        free(results[i]->sums);
+        free(results[i]);
+    }
+}
+
+    // Destroy the mutex
+    pthread_mutex_destroy(&mtx);
+
     return;
 }

@@ -27,6 +27,10 @@ int main(int argc, char** argv) {
     tables = malloc(MAX_N_TABLES * sizeof(table));
     queries = malloc(MAX_N_QUERIES * sizeof(QueryInfo));
 
+    //init job scheduler
+    jobscheduler* scheduler = malloc(sizeof(jobscheduler));
+    init_scheduler(scheduler);
+    
     //buffer for reading input
     char* line = malloc(MAX_LINE_SIZE*sizeof(char));
     size_t line_max_size = MAX_LINE_SIZE;
@@ -43,22 +47,30 @@ int main(int argc, char** argv) {
         tables[n_tables++]=load_relation(line);
     }
 
-    int current = 0;
     //parse batch of queries
     while ((n_read=getline(&line,&line_max_size,stdin))>0) {
         //remove newline and carriage return for the last 2 chars
         for (int i=0; i<2; i++)
             if ((line[strlen(line)-1] == 10) || (line[strlen(line)-1] == 13))
                 line[strlen(line)-1] = 0;
-        if (strcmp(line,"F")==0) continue; // End of a batch
+        // End of a batch,we have to execute all the queries
+        if (strcmp(line,"F")==0) {
+            exec_all_queries(queries, tables, n_queries,scheduler);
+            
+            //we have to reset the queries array
+            for(int i=0;i<n_queries;i++){
+                query_info_delete(&(queries[i]));
+            }
+            n_queries = 0;
+            continue;
+        }
         parse_query(line,&(queries[n_queries++]));
-
-        if (optimize) {
-            int optimal[get_join_count(&queries[current])]; // stores optimal join sequence
-            optimize_query(tables, &queries[current], optimal);
-            exec_query(&queries[current++],tables, optimal);
-        } else 
-            exec_query(&queries[current++],tables, NULL);
+        // if (optimize) {
+        //     int optimal[get_join_count(&queries[current])]; // stores optimal join sequence
+        //     optimize_query(tables, &queries[current], optimal);
+        //     exec_query(&queries[current++],tables, optimal);
+        // } else 
+        //     exec_query(&queries[current++],tables, NULL);
     }
     free(line);
 
@@ -73,10 +85,9 @@ int main(int argc, char** argv) {
     free(tables);
     
     //free queries mem
-    for(int i=0;i<n_queries;i++){
-        query_info_delete(&(queries[i]));
-    }
     free(queries);
 
+    delete_scheduler(scheduler);
+    free(scheduler);
     return 0;
 }

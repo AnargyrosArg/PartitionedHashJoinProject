@@ -53,8 +53,6 @@ void print_query_info(QueryInfo qinfo){
     }
 }
 
-
-//TODO LIST APPENDS
 void append_to_list_filter(FilterInfo** head,FilterInfo* node){
    FilterInfo* tmp = *head;
     if(*head == NULL) {

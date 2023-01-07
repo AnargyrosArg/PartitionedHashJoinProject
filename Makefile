@@ -2,8 +2,8 @@ BUILD_DIR = ./build
 TEST_DIR = ./tests
 SRC_DIR = ./src
 INCL_DIR = ./include 
-GCC_FLAGS = -I$(INCL_DIR) -Wall -O2
-SOURCE_FILES = main.c hash1.c partition.c utils.c hashtable.c join.c relations.c parser.c intermediates.c filter.c execqueries.c stats.c optimizer.c sort.c
+GCC_FLAGS = -I$(INCL_DIR) -Wall -O2 -pthread -lm #-g -pg
+SOURCE_FILES = main.c hash1.c partition.c utils.c hashtable.c join.c relations.c parser.c intermediates.c filter.c execqueries.c jobscheduler.c stats.c optimizer.c sort.c
 HARNESS_SRC = harness.cpp
 OBJ_FILES = $(addprefix $(BUILD_DIR)/,$(SOURCE_FILES:.c=.o))
 
@@ -45,7 +45,7 @@ clean_tests:
 
 
 profile: $(BUILD_DIR) $(OBJ_FILES)
-	gcc $(GCC_FLAGS) -g -pg $(BUILD_DIR)/*.o -o profile_exec -lm
-	./profile_exec < test_input.txt
+	gcc $(GCC_FLAGS) -g -pg $(BUILD_DIR)/*.o -o profile_exec
+	./profile_exec < small.txt
 	gprof -l ./profile_exec gmon.out > profile.txt
 	rm -rf ./gmon.out ./profile_exec

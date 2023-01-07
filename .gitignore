@@ -16,4 +16,7 @@ profile_exec
 small.txt
 analysis.txt
 tests/intermediates_tests
-workloads/public/
+old_profile.txt
+public.txt
+test.txt
+workloads/public
