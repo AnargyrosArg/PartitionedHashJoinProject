@@ -62,13 +62,14 @@ Intermediate* selfjoin(int rel1,int rel2,uint col1,uint col2,Intermediate* inter
 }
 
 //now returns the result of the join instead of printing it
-// sequence: optimal join execution order
-exec_result* exec_query(QueryInfo *query, table* tabl,jobscheduler* scheduler, int* sequence){
-    
+exec_result* exec_query(QueryInfo *query, table* tabl,jobscheduler* scheduler, int optimize) {
     FilterInfo* current_filter = query->filters;
     JoinInfo* current_join = query->joins;
     SelectionInfo* current_proj = query->projections;
+
     int join_counter = 0, found = 0;
+    int sequence[get_join_count(query)]; // stores optimal join sequence (if optimizer is used)
+    int* final_sequence;
 
     //we create the intermediate struct that we will use to store the results
     Intermediates* intermediates = init_intermediates();
@@ -94,6 +95,15 @@ exec_result* exec_query(QueryInfo *query, table* tabl,jobscheduler* scheduler, i
         current_filter = current_filter->next;
     }
 
+    // query optimization
+    if (optimize) {
+        optimize_query(tabl, query, sequence);
+        // for (int i=0; i<get_join_count(query); i++) printf("%d ", sequence[i]);
+        // printf("\n"); fflush(stdout);
+        final_sequence = sequence;
+    }
+    else final_sequence = NULL;
+
     // now we continue with the joins
     for (int i=0; i<get_join_count(query); i++) {
         current_join = query->joins;
@@ -101,7 +111,7 @@ exec_result* exec_query(QueryInfo *query, table* tabl,jobscheduler* scheduler, i
 
         // if we have sequence, follow that, otherwise, execute joins in default order
         while(current_join != NULL) {
-            if ((sequence != NULL && join_counter == sequence[i]) || (sequence == NULL && join_counter == i)) {
+            if ((final_sequence != NULL && join_counter == final_sequence[i]) || (final_sequence == NULL && join_counter == i)) {
                 found = 1;
                 break;
             }
@@ -206,8 +216,9 @@ void *thread_function(void *args){
 
     table* tabl = arg->tabl;
     jobscheduler* scheduler = arg->scheduler;
+    int optimize = arg->optimize;
 
-    exec_result *res= exec_query(query,tabl,scheduler, NULL);
+    exec_result *res= exec_query(query,tabl,scheduler, optimize);
     res->numofquery = querynum;
 
 
@@ -216,7 +227,7 @@ void *thread_function(void *args){
 
 
 //function that executes all the queries
-void exec_all_queries(QueryInfo *queries,table *tabl,uint num_queries,jobscheduler* scheduler){
+void exec_all_queries(QueryInfo *queries,table *tabl,uint num_queries,jobscheduler* scheduler, int optimize){
 
     int n_threads;
     if(MAX_QUERY_THREADS < num_queries){
@@ -244,7 +255,7 @@ void exec_all_queries(QueryInfo *queries,table *tabl,uint num_queries,jobschedul
     while(querycounter < num_queries){        
         //we create the threads
         for (int i=0;i<n_threads;i++){
-            ThreadArgs args = { queries, tabl, scheduler };
+            ThreadArgs args = { queries, tabl, scheduler, optimize };
             pthread_create(&threads[i],NULL,thread_function,&args);
         }
         //we wait for the threads to finish and get the results of each one

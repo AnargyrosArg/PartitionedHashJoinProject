@@ -5,7 +5,6 @@
 #include "relations.h"
 #include "utils.h"
 #include "execqueries.h"
-#include "optimizer.h"
 
 #define MAX_LINE_SIZE 100
 #define MAX_N_TABLES 25
@@ -22,7 +21,7 @@ int main(int argc, char** argv) {
 
     // set to true (non-zero) to enable optimizer
     // WARNING: not yet actually functional (only thing it does is calculate initial stats)
-    int optimize = 0;
+    int optimize = 1;
 
     //allocate table array
     tables = malloc(MAX_N_TABLES * sizeof(table));
@@ -56,7 +55,7 @@ int main(int argc, char** argv) {
                 line[strlen(line)-1] = 0;
         // End of a batch,we have to execute all the queries
         if (strcmp(line,"F")==0) {
-            exec_all_queries(queries, tables, n_queries,scheduler);
+            exec_all_queries(queries, tables, n_queries,scheduler, optimize);
             
             //we have to reset the queries array
             for(int i=0;i<n_queries;i++){
@@ -66,12 +65,6 @@ int main(int argc, char** argv) {
             continue;
         }
         parse_query(line,&(queries[n_queries++]));
-        // if (optimize) {
-        //     int optimal[get_join_count(&queries[current])]; // stores optimal join sequence
-        //     optimize_query(tables, &queries[current], optimal);
-        //     exec_query(&queries[current++],tables, optimal);
-        // } else 
-        //     exec_query(&queries[current++],tables, NULL);
     }
     free(line);
 
