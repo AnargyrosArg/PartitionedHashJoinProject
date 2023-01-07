@@ -16,3 +16,4 @@ profile_exec
 small.txt
 analysis.txt
 tests/intermediates_tests
+workloads/public/

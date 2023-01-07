@@ -1,17 +1,8 @@
 #include "optimizer.h"
 
-/*  PROBLEMATIC QUERIES (anything with more joins than necessary to join everything together)
-9 1 12|0.2=1.0&1.0=2.1&2.2=1.0&0.2<2685|2.0
-1 12 2|0.0=1.2&0.0=2.1&1.1=0.0&1.0>25064|0.2 1.3
-13 0 2|0.2=1.0&1.0=0.1&1.0=2.2&0.1>4477|2.0 2.3 1.2
-9 1 11|0.2=1.0&1.0=2.1&1.0=0.2&0.3>3991|1.0
-7 0 9|0.1=1.0&1.0=0.1&1.0=2.1&0.1>3791|1.2 1.2
-7 1 3|0.2=1.0&1.0=2.1&1.0=0.2&0.2>6082|2.3 2.1
-*/
-
 // finds show optimal join execution order for given query, and stores it in given result_sequence array
 // careful: returns JOIN SEQUENCE, not relation sequence
-// result_sequence array should have size equal to [number of queries]
+// result_sequence array should have size equal to [number of joins]
 void optimize_query(table* tables, QueryInfo* query, int* result_sequence) {
     // use hashtable to store best sequence for a set of relations
     // a key is the concatenation of the (1-indexed) relations in the set, after the latter has been ordered
@@ -21,7 +12,8 @@ void optimize_query(table* tables, QueryInfo* query, int* result_sequence) {
     int nsize = MAX_RELS_PER_QUERY; // neighborhood size
     hashtable* best_tree_hashtable = init_hashtable(get_best_tree_max_size(), nsize, hash_simple);
 
-    int num_rels = query->num_rels, max_count = factorial(num_rels), count, join_index;
+    int num_rels = query->num_rels, num_joins = get_join_count(query);
+    int max_count = factorial(num_rels), count = 0, join_index;
     int* tmp; int* tmp_subset; int* tree;
     uint key;
 
@@ -85,7 +77,13 @@ void optimize_query(table* tables, QueryInfo* query, int* result_sequence) {
             break;
         }
         result_sequence[i-1] = join_index;
+        count = i; // used in for loop below
     }
+
+    // attach any extra missed joins to the join sequence
+    for (int i=0; i<num_joins; i++)
+        if (!in(result_sequence, num_joins, i))
+            result_sequence[count++] = i;
 
     // freedom
     delete_hashtable(best_tree_hashtable);
