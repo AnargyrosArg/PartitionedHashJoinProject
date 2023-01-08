@@ -1,12 +1,17 @@
-workloads/public/r0
-workloads/public/r1
-workloads/public/r2
-workloads/public/r3
-workloads/public/r4
-workloads/public/r5
-workloads/public/r6
-workloads/public/r7
-workloads/public/r8
+workloads/small/r0
+workloads/small/r1
+workloads/small/r2
+workloads/small/r3
+workloads/small/r4
+workloads/small/r5
+workloads/small/r6
+workloads/small/r7
+workloads/small/r8
+workloads/small/r9
+workloads/small/r10
+workloads/small/r11
+workloads/small/r12
+workloads/small/r13
 Done
-7 7 0|0.1=1.2&1.2=2.0&1.0>11263845|0.2 2.0
+3 0 1|0.2=1.0&0.1=2.0&0.2>3499|1.2 0.1
 F
