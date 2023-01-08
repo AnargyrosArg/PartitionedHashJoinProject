@@ -50,6 +50,11 @@ void helper_functions(void) {
     TEST_ASSERT(sequence_cost(tables, query, other_sequence, 3) == 2564);
 
     delete_hashtable(best_tree_hashtable);
+    delete_table(&(tables[0]));
+    delete_table(&(tables[1]));
+    delete_table(&(tables[2]));
+    delete_table(&(tables[3]));
+    query_info_delete(query);
     free(query);
 }
 
@@ -68,6 +73,11 @@ void optimizer(void) {
     optimize_query(tables, query, result);
     TEST_ASSERT(result[0] == 1 && result[1] == 0);
 
+    delete_table(&(tables[0]));
+    delete_table(&(tables[1]));
+    delete_table(&(tables[2]));
+    delete_table(&(tables[3]));
+    query_info_delete(query);
     free(query);
 }
 

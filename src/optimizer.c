@@ -206,6 +206,7 @@ uint64_t sequence_cost(table* tables, QueryInfo* query, int* sequence, size_t si
         stat = update_query_stats_join(tables, stat, query, join_index, &cost);
         total_cost += cost; // cost is the sum of intermediate result sizes
     }
+    delete_query_stats(&stat);
     return total_cost;
 }
 

@@ -48,6 +48,11 @@ void simple_query_stats(void) {
     delete_query_stats(&stat);
     TEST_ASSERT(stat == NULL);
 
+    delete_table(&(tables[0]));
+    delete_table(&(tables[1]));
+    delete_table(&(tables[2]));
+    delete_table(&(tables[3]));
+    query_info_delete(query);
     free(query);
 }
 
@@ -80,6 +85,11 @@ void update_query_stats(void) {
     TEST_ASSERT(cost == 640);
 
     delete_query_stats(&stat);
+    delete_table(&(tables[0]));
+    delete_table(&(tables[1]));
+    delete_table(&(tables[2]));
+    delete_table(&(tables[3]));
+    query_info_delete(query);
     free(query);
 }
 
