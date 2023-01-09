@@ -1,3 +1,5 @@
+[![C/C++ CI](https://github.com/AnargyrosArg/PartitionedHashJoinProject/actions/workflows/c-cpp.yml/badge.svg?branch=anarg)](https://github.com/AnargyrosArg/PartitionedHashJoinProject/actions/workflows/c-cpp.yml)
+
 # PartitionedHashJoinProject
 Υλοποίηση ενός Partitioned hash join αλγόριθμου για το μάθημα "Ανάπτυξη Λογισμικού για Πληροφοριακά Συστήματα" - 2022-2023
 - Ιωάννης Μαυροειδής - sdi1900108
