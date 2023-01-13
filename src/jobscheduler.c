@@ -43,9 +43,26 @@ job pop(jobqueue* queue){
 //========================== Scheduler ==========================
 
 //TODO delete scheduler
+void delete_scheduler(jobscheduler* scheduler){
+    //signal execution is done
+    scheduler->DONE = true;
+    //wake up threads
+    //collect threads
+    pthread_cond_broadcast(&(scheduler->work_cond));
+    for(int i=0;i<N_WORKERS;i++){
+        pthread_join(scheduler->workers[i],NULL);
+    }
+    //destroy mutex / cond variable
+    pthread_cond_destroy(&(scheduler->work_cond));
+    pthread_mutex_destroy(&(scheduler->work_mutex));
+
+    //TODO replace with a queue_destroy function!
+    pthread_mutex_destroy(&(scheduler->jobsqueue.queue_lock));
+}
 
 void init_scheduler(jobscheduler* scheduler){
     init_queue(&(scheduler->jobsqueue));
+    scheduler->DONE = false;
     pthread_cond_init(&(scheduler->work_cond),NULL);
     pthread_mutex_init(&(scheduler->work_mutex),NULL);
     //start worker threads
@@ -77,8 +94,13 @@ void* Worker(void* sch){
         pthread_mutex_lock(&(scheduler->work_mutex));
 
         //wait for work if none
-        while(isEmpty(&(scheduler->jobsqueue))){
+        while(isEmpty(&(scheduler->jobsqueue)) && !scheduler->DONE){
             pthread_cond_wait(&(scheduler->work_cond),&(scheduler->work_mutex));
+        }
+
+        if(scheduler->DONE){
+            pthread_mutex_unlock(&(scheduler->work_mutex));
+            break;
         }
 
         //lock queue mutex
@@ -99,6 +121,7 @@ void* Worker(void* sch){
 
         //repeat
     }
+    return NULL;
 }
 
 //==============================================================================
