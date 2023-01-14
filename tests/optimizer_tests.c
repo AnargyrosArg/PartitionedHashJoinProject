@@ -1,10 +1,11 @@
+#include "acutest.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include "stats.h"
 #include "hashtable.h"
 #include "sort.h"
-#include "acutest.h"
 #include "optimizer.h"
+#include "parser.h"
 
 // basic query stats calls
 void helper_functions(void) {
@@ -50,6 +51,10 @@ void helper_functions(void) {
     TEST_ASSERT(sequence_cost(tables, query, default_sequence, 3) == 2584);
     TEST_ASSERT(sequence_cost(tables, query, other_sequence, 3) == 2564);
 
+    int result[2];
+    optimize_query(tables, query, result);
+    TEST_ASSERT(result[0] == 1 && result[1] == 0);
+
     delete_hashtable(best_tree_hashtable);
     delete_table(&(tables[0]));
     delete_table(&(tables[1]));
@@ -59,8 +64,9 @@ void helper_functions(void) {
     free(query);
 }
 
-// update query stats
-void optimizer(void) {
+
+// basic query stats calls
+void optimizer_test(void) {
     table tables[4];
     tables[0] = load_relation("../workloads/small/r0", 1);
     tables[1] = load_relation("../workloads/small/r1", 1);
@@ -68,8 +74,9 @@ void optimizer(void) {
     tables[3] = load_relation("../workloads/small/r3", 1);
 
     QueryInfo* query = malloc(sizeof(QueryInfo));
-    //query_info_init(query);
+    query_info_init(query);
     parse_query("3 0 1|0.2=1.0&0.1=2.0&0.2>3499|1.2 0.1", query);
+
 
     int result[2];
     optimize_query(tables, query, result);
@@ -84,7 +91,7 @@ void optimizer(void) {
 }
 
 TEST_LIST = {
-    { "helper functions", helper_functions },
-    { "optimize_query", optimizer },
-    { NULL, NULL }
+    { "helper functions", helper_functions},
+    { "optimize_query", optimizer_test},
+    { 0,0 }
 };
