@@ -2,9 +2,9 @@ name: C/C++ CI
 
 on:
   push:
-    branches: [ "master","anarg","sdi1900012","Giannaras" ]
+    branches: [ "master","anarg","sdi1900012","Gianaras" ]
   pull_request:
-    branches: [ "master","anarg","sdi1900012","Giannaras" ]
+    branches: [ "master","anarg","sdi1900012","Gianaras" ]
 
 jobs:
   build:
