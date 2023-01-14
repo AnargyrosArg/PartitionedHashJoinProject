@@ -14,7 +14,7 @@ uint64_t printsum(int rel, int column, Intermediates* inter, table *tabl,int act
         uint rowid = intermediate->rowids[i][rel];
         uint64_t value = tabl->table[column][rowid];
         sum += value;
-        //printf("value %d is %lu ",i,sum);
+        // printf("(%d %lu) ",i,sum);
     }
 
     //if the sum is equal to 0 then we return 0
@@ -62,13 +62,14 @@ Intermediate* selfjoin(int rel1,int rel2,uint col1,uint col2,Intermediate* inter
 }
 
 //now returns the result of the join instead of printing it
-exec_result* exec_query(QueryInfo *query, table* tabl,jobscheduler* scheduler){
-    
+exec_result* exec_query(QueryInfo *query, table* tabl,jobscheduler* scheduler, int optimize) {
     FilterInfo* current_filter = query->filters;
     JoinInfo* current_join = query->joins;
     SelectionInfo* current_proj = query->projections;
-    // debug tools
-    int join_counter = 0;
+
+    int join_counter = 0, found = 0;
+    int sequence[get_join_count(query)]; // stores optimal join sequence (if optimizer is used)
+    int* final_sequence;
 
     //we create the intermediate struct that we will use to store the results
     Intermediates* intermediates = init_intermediates();
@@ -94,17 +95,63 @@ exec_result* exec_query(QueryInfo *query, table* tabl,jobscheduler* scheduler){
         current_filter = current_filter->next;
     }
 
-    //now we continue with the joins
-    //we pass all the join list till the end
-    while(current_join !=NULL){
+    // query optimization
+    if (optimize) {
+        optimize_query(tabl, query, sequence);
+        final_sequence = sequence;
+
+        // check if sequence is valid beforehand
+        for (int i=0; i<get_join_count(query); i++) {
+            current_join = query->joins;
+            join_counter = 0; found = 0;
+
+            // follow sequence
+            while(current_join != NULL) {
+                if (join_counter == final_sequence[i]) {
+                    found = 1; break;
+                }
+                current_join = current_join->next;
+                join_counter++;
+            }
+
+            // if the sequence for whatever reason is invalid, disregard and just execute joins in default order
+            if (!found) {
+                int id = rand() % 1000;
+                fprintf(stderr, "exec_query: could not find next join for following sequence of id %d\n", id);
+                for (int i=0; i<get_join_count(query); i++)
+                    fprintf(stderr, "sequence %d index %d is %d\n", id, i, sequence[i]);
+                fflush(stderr);
+
+                final_sequence = NULL; // forget about the sequence
+            }
+        }
+    }
+    else final_sequence = NULL;
+
+    // now we continue with the joins
+    for (int i=0; i<get_join_count(query); i++) {
+        current_join = query->joins;
+        join_counter = 0; found = 0;
+
+        // if we have sequence, follow that, otherwise, execute joins in default order
+        while(current_join != NULL) {
+            if ((final_sequence != NULL && join_counter == final_sequence[i]) || (final_sequence == NULL && join_counter == i)) {
+                found = 1;
+                break;
+            }
+            current_join = current_join->next;
+            join_counter++;
+        }
+        if (!found) fprintf(stderr, "this should never print\n");
+
+        // execute found join
         int rel1 = current_join->left.rel_id;
         int rel2 = current_join->right.rel_id;
         int col1 = current_join->left.col_id;
         int col2 = current_join->right.col_id;
         int actualid1 = query->rel_ids[rel1];
         int actualid2 = query->rel_ids[rel2];
-
-     
+    
         //now we create the relations that will be joined
         //first we check if they exist in the intermediates
         Intermediate* inter1;
@@ -130,14 +177,7 @@ exec_result* exec_query(QueryInfo *query, table* tabl,jobscheduler* scheduler){
             remove_intermediate(inter2,intermediates);
             insert_intermediate(joinres,intermediates);
             //free(joinres);
-       }
-       
-
-        //we coninue to the next join
-        current_join = current_join->next;
-        join_counter++;
-
-        
+        }
     }
 
     //now that we finished with the joins and the filter all we have to do is do the projections and return the sum
@@ -199,8 +239,9 @@ void *thread_function(void *args){
 
     table* tabl = arg->tabl;
     jobscheduler* scheduler = arg->scheduler;
+    int optimize = arg->optimize;
 
-    exec_result *res= exec_query(query,tabl,scheduler);
+    exec_result *res= exec_query(query,tabl,scheduler, optimize);
     res->numofquery = querynum;
 
 
@@ -209,7 +250,7 @@ void *thread_function(void *args){
 
 
 //function that executes all the queries
-void exec_all_queries(QueryInfo *queries,table *tabl,uint num_queries,jobscheduler* scheduler){
+void exec_all_queries(QueryInfo *queries,table *tabl,uint num_queries,jobscheduler* scheduler, int optimize){
 
     int n_threads;
     if(MAX_QUERY_THREADS < num_queries){
@@ -237,7 +278,7 @@ void exec_all_queries(QueryInfo *queries,table *tabl,uint num_queries,jobschedul
     while(querycounter < num_queries){        
         //we create the threads
         for (int i=0;i<n_threads;i++){
-            ThreadArgs args = { queries, tabl, scheduler };
+            ThreadArgs args = { queries, tabl, scheduler, optimize };
             pthread_create(&threads[i],NULL,thread_function,&args);
         }
         //we wait for the threads to finish and get the results of each one

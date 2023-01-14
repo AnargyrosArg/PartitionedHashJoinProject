@@ -78,5 +78,6 @@ void parse_query(char* query,QueryInfo* qinfo);
 void query_info_init(QueryInfo* qinfo);
 void query_info_delete(QueryInfo* qinfo);
 void print_query_info(QueryInfo qinfo);
+size_t get_join_count(QueryInfo* query);
 
 #endif
