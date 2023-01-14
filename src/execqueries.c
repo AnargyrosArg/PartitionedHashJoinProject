@@ -98,33 +98,9 @@ exec_result* exec_query(QueryInfo *query, table* tabl,jobscheduler* scheduler, i
     // query optimization
     if (optimize) {
         optimize_query(tabl, query, sequence);
+        // for (int i=0; i<get_join_count(query); i++) printf("%d ", sequence[i]);
+        // printf("\n"); fflush(stdout);
         final_sequence = sequence;
-
-        // check if sequence is valid beforehand
-        for (int i=0; i<get_join_count(query); i++) {
-            current_join = query->joins;
-            join_counter = 0; found = 0;
-
-            // follow sequence
-            while(current_join != NULL) {
-                if (join_counter == final_sequence[i]) {
-                    found = 1; break;
-                }
-                current_join = current_join->next;
-                join_counter++;
-            }
-
-            // if the sequence for whatever reason is invalid, disregard and just execute joins in default order
-            if (!found) {
-                int id = rand() % 1000;
-                fprintf(stderr, "exec_query: could not find next join for following sequence of id %d\n", id);
-                for (int i=0; i<get_join_count(query); i++)
-                    fprintf(stderr, "sequence %d index %d is %d\n", id, i, sequence[i]);
-                fflush(stderr);
-
-                final_sequence = NULL; // forget about the sequence
-            }
-        }
     }
     else final_sequence = NULL;
 
@@ -142,7 +118,8 @@ exec_result* exec_query(QueryInfo *query, table* tabl,jobscheduler* scheduler, i
             current_join = current_join->next;
             join_counter++;
         }
-        if (!found) fprintf(stderr, "this should never print\n");
+        if (!found) fprintf(stderr, "exec_query: could not find next join\n");
+        // printf("executing join %d\n", join_counter);
 
         // execute found join
         int rel1 = current_join->left.rel_id;
