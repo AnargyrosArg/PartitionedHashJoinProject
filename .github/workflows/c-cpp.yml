@@ -2,14 +2,14 @@ name: C/C++ CI
 
 on:
   push:
-    branches: [ "master","anarg" ]
+    branches: [ "master","anarg","sdi1900012","Gianaras" ]
   pull_request:
-    branches: [ "master","anarg" ]
+    branches: [ "master","anarg","sdi1900012","Gianaras" ]
 
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: 	ubuntu-20.04
 
     steps:
     - uses: actions/checkout@v3
