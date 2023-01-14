@@ -38,7 +38,8 @@
         "stats.h": "c",
         "jobscheduler.h": "c",
         "pthread.h": "c",
-        "string.h": "c"
+        "string.h": "c",
+        "optimizer.h": "c"
     },
     "makefile.launchConfigurations": [
         {

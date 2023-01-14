@@ -6,7 +6,8 @@
 - Ιωάννης Αποστολάτος - sdi1900012
 - Ανάργυρος Αργυρός - sdi1900014
 
-
+## Report:
+https://docs.google.com/document/d/1x_Lit7WWUSuO1zJxo-dPVdW0XdW-UuxbamUebPIFWMY/edit?usp=sharing
 ## Compiling:
 ------
 To compile project:

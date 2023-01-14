@@ -12,13 +12,7 @@
 
 #define MAX_QUERY_THREADS 6
 
-//we need this struct for the thread function
-typedef struct {
-  QueryInfo* query;
-  table* tabl;
-  jobscheduler* scheduler;
-  int optimize; // if optimize is non-zero, optimizer is used
-} ThreadArgs;
+
 
 //struct that holds the information for the projections of each query
 typedef struct{
@@ -26,6 +20,16 @@ typedef struct{
     uint64_t *sums;
     int numofquery; //this is the number of the query, we need it to print the results in order
 } exec_result;
+
+//we need this struct for the thread function
+typedef struct {
+  QueryInfo* query;
+  int num_queries;
+  table* tabl;
+  jobscheduler* scheduler;
+  exec_result** results;
+  int optimize; // if optimize is non-zero, optimizer is used
+} ThreadArgs;
 
 
 uint64_t printsum(int , int , Intermediates* ,table *,int );
