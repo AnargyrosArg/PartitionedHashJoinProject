@@ -12,8 +12,8 @@
 #include "jobscheduler.h"
 
 void* joinjob(void* p);
-result joinfunction(relation r, relation s);
-Intermediate* join_intermediates(Intermediate* inter1,Intermediate* inter2,QueryInfo* query,int rel1,int col1,int rel2,int col2,table* tabl);
+result joinfunction(relation r, relation s,jobscheduler* scheduler);
+Intermediate* join_intermediates(Intermediate* inter1,Intermediate* inter2,QueryInfo* query,int rel1,int col1,int rel2,int col2,table* tabl,jobscheduler* scheduler);
 Intermediate* parallel_join(Intermediate* inter1,Intermediate* inter2,QueryInfo* query,int rel1,int col1,int rel2,int col2,table* tabl,jobscheduler* scheduler);
 
 typedef struct join_job_args join_job_args;

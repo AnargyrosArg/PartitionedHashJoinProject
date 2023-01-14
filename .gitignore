@@ -19,3 +19,6 @@ tests/intermediates_tests
 old_profile.txt
 public.txt
 test.txt
+workloads/public
+tests/stats_tests
+tests/optimizer_tests

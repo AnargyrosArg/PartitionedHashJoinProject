@@ -19,10 +19,16 @@ int main(int argc, char** argv) {
     QueryInfo* queries;
     size_t n_queries=0;
 
+    // set to true (non-zero) to enable optimizer
+    // WARNING: not yet actually functional (only thing it does is calculate initial stats)
+    int optimize = 1;
+
     //allocate table array
     tables = malloc(MAX_N_TABLES * sizeof(table));
     queries = malloc(MAX_N_QUERIES * sizeof(QueryInfo));
-
+    for(int i=0;i<MAX_N_QUERIES;i++){
+        query_info_init(&(queries[i]));
+    }
     //init job scheduler
     jobscheduler* scheduler = malloc(sizeof(jobscheduler));
     init_scheduler(scheduler);
@@ -40,38 +46,44 @@ int main(int argc, char** argv) {
                 line[strlen(line)-1] = 0;
         if (strcmp(line,"Done")==0) break;
         //store table
-        tables[n_tables++]=load_relation(line);
+        tables[n_tables++]=load_relation(line, optimize);
     }
 
-    int current = 0;
     //parse batch of queries
     while ((n_read=getline(&line,&line_max_size,stdin))>0) {
         //remove newline and carriage return for the last 2 chars
         for (int i=0; i<2; i++)
             if ((line[strlen(line)-1] == 10) || (line[strlen(line)-1] == 13))
                 line[strlen(line)-1] = 0;
-        if (strcmp(line,"F")==0) continue; // End of a batch
+        // End of a batch,we have to execute all the queries
+        if (strcmp(line,"F")==0) {
+            exec_all_queries(queries, tables, n_queries,scheduler, optimize);
+            
+            //we have to reset the queries array
+            for(int i=0;i<n_queries;i++){
+                query_info_delete(&(queries[i]));
+            }
+            n_queries = 0;
+            continue;
+        }
         parse_query(line,&(queries[n_queries++]));
-        exec_query(&queries[current++],tables,scheduler);
     }
     free(line);
 
-
     //harness waits for result before sending next batch , so we have to execute queries as they come    
     //exec_all_queries(queries, tables, n_queries);
-    
+
     //free tables mem
     for(int i =0;i<n_tables;i++){
+        // print_table(tables[i], 1);
         delete_table(&(tables[i]));
     }
     free(tables);
     
     //free queries mem
-    for(int i=0;i<n_queries;i++){
-        query_info_delete(&(queries[i]));
-    }
     free(queries);
 
-    //TODO free and destroy scheduler
+    delete_scheduler(scheduler);
+    free(scheduler);
     return 0;
 }

@@ -5,12 +5,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <stdatomic.h>
 
 #define MAX_QUEUE_SIZE 4096
-#define N_WORKERS 4
+#define N_WORKERS 6
 
 //enum to determine what kind of job the scheduler just pulled out of the queue
-enum JobType {JOIN_JOB};
+enum JobType {JOIN_JOB , HISTOGRAM_JOB , ORDER_JOB , FILTER_JOB};
 
 typedef struct jobscheduler jobscheduler;
 typedef struct job job;
@@ -52,13 +53,15 @@ struct jobscheduler
     //condition variable that signals worker threads that work is available
     pthread_cond_t work_cond;
     pthread_mutex_t work_mutex;
+    
+    bool DONE;
 };
 
 
 bool isFull(jobqueue*);
 bool isEmpty(jobqueue*);
 void schedule_job(jobscheduler* scheduler,job j);
-
+void delete_scheduler(jobscheduler* scheduler);
 void init_scheduler(jobscheduler* scheduler);
 
 #endif

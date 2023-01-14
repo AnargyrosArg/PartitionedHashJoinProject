@@ -2,8 +2,8 @@ BUILD_DIR = ./build
 TEST_DIR = ./tests
 SRC_DIR = ./src
 INCL_DIR = ./include 
-GCC_FLAGS = -I$(INCL_DIR) -Wall -O2 -pthread #-g -pg
-SOURCE_FILES = main.c hash1.c partition.c utils.c hashtable.c join.c relations.c parser.c intermediates.c filter.c execqueries.c jobscheduler.c
+GCC_FLAGS = -I$(INCL_DIR) -Wall -O2 -pthread -lm #-g -pg
+SOURCE_FILES = main.c hash1.c partition.c utils.c hashtable.c join.c relations.c parser.c intermediates.c filter.c execqueries.c jobscheduler.c stats.c optimizer.c sort.c
 HARNESS_SRC = harness.cpp
 OBJ_FILES = $(addprefix $(BUILD_DIR)/,$(SOURCE_FILES:.c=.o))
 
@@ -13,14 +13,14 @@ OBJ_FILES = $(addprefix $(BUILD_DIR)/,$(SOURCE_FILES:.c=.o))
 
 #Default rule, makes executable
 out: $(BUILD_DIR) $(OBJ_FILES) $(INCL_DIR)/* harness
-	gcc $(GCC_FLAGS) $(BUILD_DIR)/*.o -o out
+	gcc $(GCC_FLAGS) $(BUILD_DIR)/*.o -o out -lm
 
 harness: $(SRC_DIR)/$(HARNESS_SRC)
 	g++ $(SRC_DIR)/$(HARNESS_SRC) -o $@
 
 #Compiles each source file into its object file individually 
 $(BUILD_DIR)/%.o : $(SRC_DIR)/%.c
-	gcc $(GCC_FLAGS) -c $< -o $@
+	gcc $(GCC_FLAGS) -c $< -o $@ -lm
 
 #Rule to run all tests , there is a separate Makefile in the tests directory that we simply run 
 test: $(OBJ_FILES)  $(TEST_DIR)
