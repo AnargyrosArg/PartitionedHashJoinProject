@@ -138,3 +138,17 @@ void remove_intermediate(Intermediate* res,Intermediates* intermediates){
     fprintf(stderr,"could not remove intermediate\n");
     exit(-1);
 }
+
+// Prints rowid_counts for all intermediates/relations (full_print prints all the rowids too)
+void print_intermediates(Intermediates* intermediates, int full_print) {
+    for (int i=0; i<intermediates->count; i++) {
+        for (int j=0; j<MAX_RELS_PER_QUERY; j++) {
+            if (intermediates->intermediates[i] != NULL && intermediates->intermediates[i]->valid_rels[j]) {
+                printf("inter %d, rel %d, count is %ld\n", i, j, intermediates->intermediates[i]->rowids_count);
+                if (!full_print) continue;
+                for (int k=0; k<intermediates->intermediates[i]->rowids_count; k++)
+                    printf("(%d %d)", k, intermediates->intermediates[i]->rowids[k][j]);
+            }
+        }
+    }
+}

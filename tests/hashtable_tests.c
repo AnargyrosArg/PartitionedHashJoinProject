@@ -41,7 +41,7 @@ void bitmap_calls(void) {
 // hashtable init tests
 void hashtable_init(void) {
     int nbsize = 4, size = 10;
-    hashtable* table = init_hashtable(size, nbsize);
+    hashtable* table = init_hashtable(size, nbsize, hash2);
     TEST_ASSERT(table->nbsize == nbsize);
     TEST_ASSERT(table->tablesize == 2*size);
     delete_hashtable(table);
@@ -53,7 +53,7 @@ void hashtable_insert(void) {
     int* ret;
 
     for (int range=start_range; range<final_range; range+=90) { // once with range 10 and once with range 100
-        hashtable* table = init_hashtable(start_size, nbsize);
+        hashtable* table = init_hashtable(start_size, nbsize, hash2);
         
         for (int i=0; i<iterations; i++) { // insert [iterations] elements
             data = rand() % range;

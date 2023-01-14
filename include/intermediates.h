@@ -46,4 +46,5 @@ void get_intermediates(Intermediates* intermediates, uint relation_index,int act
 int in_same_intermediate_relation(Intermediates* inter ,int rel1 , int rel2,Intermediate** ret);
 void insert_intermediate(Intermediate* joinres,Intermediates* intermediates);
 void remove_intermediate(Intermediate* res,Intermediates* intermediates);
+void print_intermediates(Intermediates* intermediates, int full_print);
 #endif

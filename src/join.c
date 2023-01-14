@@ -27,7 +27,7 @@ Intermediate* join_intermediates(Intermediate* inter1,Intermediate* inter2,Query
         //size of neighbour starts at 8
         //must free memory at the end 
         int H = 8;
-        hashtable *tableR = init_hashtable(bucketsizeA,H);
+        hashtable *tableR = init_hashtable(bucketsizeA,H,hash2);
         //print_hashtable(tableR);
 
         //now that we created our hashtable we want to insert every tuple of the partition into the hashtable 
@@ -254,7 +254,7 @@ void* joinjob(void* p){
     //now we have to create hashtable for the i-th partition of r
     //size of neighbour starts at 8
     int H = 8;
-    hashtable *tableR = init_hashtable(bucketsizeA,H);
+    hashtable *tableR = init_hashtable(bucketsizeA,H, hash2);
     //print_hashtable(tableR);
     //now that we created our hashtable we want to insert every tuple of the partition into the hashtable 
     
@@ -336,7 +336,7 @@ result joinfunction(relation r, relation s,jobscheduler* scheduler){
         //size of neighbour starts at 8
         //must free memory at the end 
         int H = 8;
-        hashtable *tableR = init_hashtable(bucketsizeA,H);
+        hashtable *tableR = init_hashtable(bucketsizeA,H,hash2);
         //print_hashtable(tableR);
 
         //now that we created our hashtable we want to insert every tuple of the partition into the hashtable 

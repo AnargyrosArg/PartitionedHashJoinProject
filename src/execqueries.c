@@ -14,7 +14,7 @@ uint64_t printsum(int rel, int column, Intermediates* inter, table *tabl,int act
         uint rowid = intermediate->rowids[i][rel];
         uint64_t value = tabl->table[column][rowid];
         sum += value;
-        //printf("value %d is %lu ",i,sum);
+        // printf("(%d %lu) ",i,sum);
     }
 
     //if the sum is equal to 0 then we return 0
@@ -62,13 +62,17 @@ Intermediate* selfjoin(int rel1,int rel2,uint col1,uint col2,Intermediate* inter
 }
 
 //now returns the result of the join instead of printing it
-exec_result* exec_query(QueryInfo *query, table* tabl,jobscheduler* scheduler){
-    
+exec_result* exec_query(QueryInfo *query, table* tabl,jobscheduler* scheduler, int optimize) {
     FilterInfo* current_filter = query->filters;
     JoinInfo* current_join = query->joins;
     SelectionInfo* current_proj = query->projections;
-    // debug tools
-    int join_counter = 0;
+
+    int join_counter = 0, found = 0;
+    int sequence[get_join_count(query)]; // stores optimal join sequence (if optimizer is used)
+    for(int i=0;i<get_join_count(query);i++){
+        sequence[i]=0;
+    }
+    int* final_sequence;
 
     //we create the intermediate struct that we will use to store the results
     Intermediates* intermediates = init_intermediates();
@@ -94,17 +98,40 @@ exec_result* exec_query(QueryInfo *query, table* tabl,jobscheduler* scheduler){
         current_filter = current_filter->next;
     }
 
-    //now we continue with the joins
-    //we pass all the join list till the end
-    while(current_join !=NULL){
+    // query optimization
+    if (optimize) {
+        optimize_query(tabl, query, sequence);
+        // for (int i=0; i<get_join_count(query); i++) printf("%d ", sequence[i]);
+        // printf("\n"); fflush(stdout);
+        final_sequence = sequence;
+    }
+    else final_sequence = NULL;
+
+    // now we continue with the joins
+    for (int i=0; i<get_join_count(query); i++) {
+        current_join = query->joins;
+        join_counter = 0; found = 0;
+
+        // if we have sequence, follow that, otherwise, execute joins in default order
+        while(current_join != NULL) {
+            if ((final_sequence != NULL && join_counter == final_sequence[i]) || (final_sequence == NULL && join_counter == i)) {
+                found = 1;
+                break;
+            }
+            current_join = current_join->next;
+            join_counter++;
+        }
+        if (!found) fprintf(stderr, "exec_query: could not find next join\n");
+        // printf("executing join %d\n", join_counter);
+
+        // execute found join
         int rel1 = current_join->left.rel_id;
         int rel2 = current_join->right.rel_id;
         int col1 = current_join->left.col_id;
         int col2 = current_join->right.col_id;
         int actualid1 = query->rel_ids[rel1];
         int actualid2 = query->rel_ids[rel2];
-
-     
+    
         //now we create the relations that will be joined
         //first we check if they exist in the intermediates
         Intermediate* inter1;
@@ -130,14 +157,7 @@ exec_result* exec_query(QueryInfo *query, table* tabl,jobscheduler* scheduler){
             remove_intermediate(inter2,intermediates);
             insert_intermediate(joinres,intermediates);
             //free(joinres);
-       }
-       
-
-        //we coninue to the next join
-        current_join = current_join->next;
-        join_counter++;
-
-        
+        }
     }
 
     //now that we finished with the joins and the filter all we have to do is do the projections and return the sum
@@ -188,28 +208,30 @@ pthread_mutex_t mtx;
 //function of a thread
 void *thread_function(void *args){
     ThreadArgs* arg = (ThreadArgs*)args;
-
     //we lock the mutex
     pthread_mutex_lock(&mtx);
-    QueryInfo* query = &arg->query[querycounter];
-    int querynum = querycounter%MAX_QUERY_THREADS;
-    querycounter++;
-    //we unlock the mutex
+    while(querycounter < arg->num_queries){
+        QueryInfo* query = &arg->query[querycounter];
+        int querynum = querycounter;
+        querycounter++;
+        //we unlock the mutex
+        pthread_mutex_unlock(&mtx);
+
+        table* tabl = arg->tabl;
+        jobscheduler* scheduler = arg->scheduler;
+        int optimize = arg->optimize;
+
+        exec_result *res= exec_query(query,tabl,scheduler, optimize);
+        res->numofquery = querynum;
+        arg->results[querynum] = res;
+    }
     pthread_mutex_unlock(&mtx);
-
-    table* tabl = arg->tabl;
-    jobscheduler* scheduler = arg->scheduler;
-
-    exec_result *res= exec_query(query,tabl,scheduler);
-    res->numofquery = querynum;
-
-
-    return res;
+    return NULL;
 }
 
 
 //function that executes all the queries
-void exec_all_queries(QueryInfo *queries,table *tabl,uint num_queries,jobscheduler* scheduler){
+void exec_all_queries(QueryInfo *queries,table *tabl,uint num_queries,jobscheduler* scheduler, int optimize){
 
     int n_threads;
     if(MAX_QUERY_THREADS < num_queries){
@@ -217,11 +239,11 @@ void exec_all_queries(QueryInfo *queries,table *tabl,uint num_queries,jobschedul
     }else{
         n_threads = num_queries;
     }
-
+    querycounter =0;
     //we create the threads
     pthread_t threads[n_threads];
     //array to store the result of each thread, we need it cause we want to print them in order
-    exec_result* results[n_threads];
+    exec_result** results= malloc(num_queries*sizeof(exec_result*));
 
     //create the mutex
     pthread_mutex_init(&mtx,NULL);
@@ -231,57 +253,51 @@ void exec_all_queries(QueryInfo *queries,table *tabl,uint num_queries,jobschedul
         results[i] = NULL;
     }
 
-    //we have to reset the querycounter to 0
-    querycounter = 0;
-
-    while(querycounter < num_queries){        
-        //we create the threads
-        for (int i=0;i<n_threads;i++){
-            ThreadArgs args = { queries, tabl, scheduler };
-            pthread_create(&threads[i],NULL,thread_function,&args);
-        }
-        //we wait for the threads to finish and get the results of each one
-        int j=0;
-        for (j=0;j<n_threads;j++){
-            pthread_join(threads[j],(void**)&results[j]);
-        }
-        //now we have to print the results in order
-        int k;
-        for(k=0;k<n_threads;k++){
-            //first we find the res that holds the same num as the k
-            int m;
-            for( m=0;m<n_threads;m++){
-                if(results[m]->numofquery == k){
-                    break;
-                }
-            }
-
-            int l;
-            for(l=0;l<results[m]->numofprojections;l++){
-                if(results[m]->sums[l] == 0){
-                    printf("NULL");
-                }
-                else{
-                    printf("%lu",results[m]->sums[l]);
-                }
-
-                if(l!=results[m]->numofprojections-1){
-                    printf(" ");
-                }
-                if(l==results[m]->numofprojections-1){
-                    printf("\n");
-                }
+    //we create the threads
+    for (int i=0;i<n_threads;i++){
+        ThreadArgs args = { queries,num_queries,tabl ,scheduler,results,optimize};
+        pthread_create(&threads[i],NULL,thread_function,&args);
+    }
+    //we wait for the threads to finish and get the results of each one
+    int j=0;
+    for (j=0;j<n_threads;j++){
+        pthread_join(threads[j],NULL);
+    }
+    //now we have to print the results in order
+    int k;
+    for(k=0;k<num_queries;k++){
+        //first we find the res that holds the same num as the k
+        int m;
+        for( m=0;m<num_queries;m++){
+            if(results[m]->numofquery == k){
+                break;
             }
         }
-        fflush(stdout);
+
+        int l;
+        for(l=0;l<results[m]->numofprojections;l++){
+            if(results[m]->sums[l] == 0){
+                printf("NULL");
+            }
+            else{
+                printf("%lu",results[m]->sums[l]);
+            }
+            if(l!=results[m]->numofprojections-1){
+                printf(" ");
+            }
+            if(l==results[m]->numofprojections-1){
+                printf("\n");
+            }
+        }
+    }
+    fflush(stdout);
 
         // Free the memory allocated for the exec_result structures
-    for (int i = 0; i < n_threads; i++) {
+    for (int i = 0; i < num_queries; i++) {
         free(results[i]->sums);
         free(results[i]);
     }
-}
-
+    free(results);
     // Destroy the mutex
     pthread_mutex_destroy(&mtx);
 
