@@ -1,8 +1,9 @@
+#include "acutest.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include "stats.h"
 #include "parser.h"
-#include "acutest.h"
+
 
 // basic query stats calls
 void simple_query_stats(void) {
@@ -13,6 +14,7 @@ void simple_query_stats(void) {
     tables[3] = load_relation("../workloads/small/r3", 1);
 
     QueryInfo* query = malloc(sizeof(QueryInfo));
+    query_info_init(query);
     parse_query("3 0 1|0.2=1.0&0.1=2.0&0.2>3499|1.2 0.1", query);
 
     // init_query_stats
@@ -65,6 +67,7 @@ void update_query_stats(void) {
     tables[3] = load_relation("../workloads/small/r3", 1);
 
     QueryInfo* query = malloc(sizeof(QueryInfo));
+    query_info_init(query);
     parse_query("3 0 1|0.2=1.0&0.1=2.0&0.2>3499|1.2 0.1", query);
 
     query_stats* stat = init_query_stats(query, tables);
@@ -93,8 +96,10 @@ void update_query_stats(void) {
     free(query);
 }
 
+
+
 TEST_LIST = {
-    { "simple stats functions", simple_query_stats },
-    { "update stats functions", update_query_stats },
-    { NULL, NULL }
+    {"simple stats functions", simple_query_stats},
+    {"update stats functions", update_query_stats},
+    { 0, 0 }
 };
