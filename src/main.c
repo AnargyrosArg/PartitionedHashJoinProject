@@ -26,7 +26,9 @@ int main(int argc, char** argv) {
     //allocate table array
     tables = malloc(MAX_N_TABLES * sizeof(table));
     queries = malloc(MAX_N_QUERIES * sizeof(QueryInfo));
-
+    for(int i=0;i<MAX_N_QUERIES;i++){
+        query_info_init(&(queries[i]));
+    }
     //init job scheduler
     jobscheduler* scheduler = malloc(sizeof(jobscheduler));
     init_scheduler(scheduler);

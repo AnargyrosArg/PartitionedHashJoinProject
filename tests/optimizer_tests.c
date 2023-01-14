@@ -15,6 +15,7 @@ void helper_functions(void) {
     tables[3] = load_relation("../workloads/small/r3", 1);
 
     QueryInfo* query = malloc(sizeof(QueryInfo));
+    query_info_init(query);
     parse_query("3 0 1|0.2=1.0&0.1=2.0&0.2>3499|1.2 0.1", query);
 
     // can_join functions
@@ -67,6 +68,7 @@ void optimizer(void) {
     tables[3] = load_relation("../workloads/small/r3", 1);
 
     QueryInfo* query = malloc(sizeof(QueryInfo));
+    //query_info_init(query);
     parse_query("3 0 1|0.2=1.0&0.1=2.0&0.2>3499|1.2 0.1", query);
 
     int result[2];
